@@ -14,6 +14,7 @@ export interface BuildAppMenusOptions {
   requestQuit: () => void;
   selectLayoutMode: (mode: LayoutMode) => void;
   selectThemeId: (themeId: string) => void;
+  sendSelectionToPi: () => void;
   showAgentNotes: boolean;
   showHelp: boolean;
   showHunkHeaders: boolean;
@@ -42,6 +43,7 @@ export function buildAppMenus({
   requestQuit,
   selectLayoutMode,
   selectThemeId,
+  sendSelectionToPi,
   showAgentNotes,
   showHelp,
   showHunkHeaders,
@@ -211,6 +213,13 @@ export function buildAppMenus({
         kind: "item",
         label: "Previous annotated file",
         action: () => moveAnnotatedFile(-1),
+      },
+      { kind: "separator" },
+      {
+        kind: "item",
+        label: "Send hunk to Pi",
+        hint: "p",
+        action: sendSelectionToPi,
       },
     ],
     help: [

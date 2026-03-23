@@ -31,6 +31,7 @@ import { buildAppMenus } from "./lib/appMenus";
 import { buildSidebarEntries, filterReviewFiles, mergeFileAnnotationsByFileId } from "./lib/files";
 import { buildAnnotatedHunkCursors, buildHunkCursors, findNextHunkCursor } from "./lib/hunks";
 import { fileRowId } from "./lib/ids";
+import { buildPiSelectionPayload, writePiSelectionPayload } from "./lib/piSelection";
 import { resolveResponsiveLayout } from "./lib/responsive";
 import { resizeSidebarWidth } from "./lib/sidebar";
 import { resolveTheme, THEMES } from "./themes";
@@ -122,7 +123,9 @@ export function App({
   const [selectedFileId, setSelectedFileId] = useState(bootstrap.changeset.files[0]?.id ?? "");
   const [selectedHunkIndex, setSelectedHunkIndex] = useState(0);
   const [scrollToNote, setScrollToNote] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | undefined>();
   const deferredFilter = useDeferredValue(filter);
+  const statusMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pagerMode = Boolean(bootstrap.input.options.pager);
   const activeTheme = resolveTheme(themeId, renderer.themeMode);
@@ -222,6 +225,14 @@ export function App({
     // feels immediate after toggling split/stack or line wrapping.
     renderer.intermediateRender();
   }, [renderer, resolvedLayout, showFilesPane, terminal.height, terminal.width, wrapLines]);
+
+  useEffect(() => {
+    return () => {
+      if (statusMessageTimeoutRef.current) {
+        clearTimeout(statusMessageTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedFile && filteredFiles[0]) {
@@ -471,6 +482,38 @@ export function App({
     setFocusArea((current) => (current === "files" ? "filter" : "files"));
   }, []);
 
+  /** Show one short-lived footer message after local actions like exporting a hunk to pi. */
+  const flashStatusMessage = useCallback((message: string) => {
+    setStatusMessage(message);
+    if (statusMessageTimeoutRef.current) {
+      clearTimeout(statusMessageTimeoutRef.current);
+    }
+
+    statusMessageTimeoutRef.current = setTimeout(() => {
+      setStatusMessage(undefined);
+      statusMessageTimeoutRef.current = null;
+    }, 2200);
+  }, []);
+
+  /** Export the focused hunk to the project-local pi selection bridge file. */
+  const sendSelectionToPi = useCallback(() => {
+    if (!selectedFile) {
+      flashStatusMessage("No file selected for Pi.");
+      return;
+    }
+
+    const payload = buildPiSelectionPayload(bootstrap.changeset, selectedFile, selectedHunkIndex);
+    if (!payload) {
+      flashStatusMessage("No hunk selected for Pi.");
+      return;
+    }
+
+    const selectionPath = writePiSelectionPayload(payload);
+    flashStatusMessage(
+      `Sent ${selectedFile.path} hunk ${selectedHunkIndex + 1} to Pi (${selectionPath}).`,
+    );
+  }, [bootstrap.changeset, flashStatusMessage, selectedFile, selectedHunkIndex]);
+
   const menus = useMemo(
     () =>
       buildAppMenus({
@@ -485,6 +528,7 @@ export function App({
         requestQuit,
         selectLayoutMode: setLayoutMode,
         selectThemeId: setThemeId,
+        sendSelectionToPi,
         showAgentNotes,
         showHelp,
         showHunkHeaders,
@@ -508,6 +552,7 @@ export function App({
       moveHunk,
       requestQuit,
       triggerRefreshCurrentInput,
+      sendSelectionToPi,
       showAgentNotes,
       showHelp,
       showHunkHeaders,
@@ -869,6 +914,12 @@ export function App({
       return;
     }
 
+    if (key.name === "p" || key.sequence === "p") {
+      sendSelectionToPi();
+      closeMenu();
+      return;
+    }
+
     if (key.name === "[") {
       moveHunk(-1);
       closeMenu();
@@ -994,6 +1045,7 @@ export function App({
           filter={filter}
           filterFocused={focusArea === "filter"}
           noticeText={noticeText ?? undefined}
+          message={statusMessage}
           terminalWidth={terminal.width}
           theme={activeTheme}
           onCloseMenu={closeMenu}
