@@ -480,6 +480,7 @@ async function parseSessionCommand(tokens: string[]): Promise<ParsedCliInput> {
           "  hunk session get --repo <path>",
           "  hunk session context <session-id>",
           "  hunk session context --repo <path>",
+          "  hunk session selection (<session-id> | --repo <path>) [--state focused|published]",
           "  hunk session navigate (<session-id> | --repo <path>) --file <path> (--hunk <n> | --old-line <n> | --new-line <n>)",
           "  hunk session navigate (<session-id> | --repo <path>) (--next-comment | --prev-comment)",
           "  hunk session reload (<session-id> | --repo <path> | --session-path <path>) [--source <path>] -- diff [ref] [-- <pathspec...>]",
@@ -543,6 +544,45 @@ async function parseSessionCommand(tokens: string[]): Promise<ParsedCliInput> {
       action: subcommand,
       output: resolveJsonOutput(parsedOptions),
       selector: resolveExplicitSessionSelector(parsedSessionId, parsedOptions.repo),
+    };
+  }
+
+  if (subcommand === "selection") {
+    const command = new Command("session selection")
+      .description("show one live Hunk session selection payload")
+      .argument("[sessionId]")
+      .option("--repo <path>", "target the live session whose repo root matches this path")
+      .option("--state <state>", "selection state: focused or published", "published")
+      .option("--json", "emit structured JSON");
+
+    let parsedSessionId: string | undefined;
+    let parsedOptions: { repo?: string; state?: string; json?: boolean } = {};
+
+    command.action(
+      (
+        sessionId: string | undefined,
+        options: { repo?: string; state?: string; json?: boolean },
+      ) => {
+        parsedSessionId = sessionId;
+        parsedOptions = options;
+      },
+    );
+
+    if (rest.includes("--help") || rest.includes("-h")) {
+      return { kind: "help", text: `${command.helpInformation().trimEnd()}\n` };
+    }
+
+    await parseStandaloneCommand(command, rest);
+    if (parsedOptions.state !== "focused" && parsedOptions.state !== "published") {
+      throw new Error("Selection state must be one of: focused, published.");
+    }
+
+    return {
+      kind: "session",
+      action: "selection",
+      output: resolveJsonOutput(parsedOptions),
+      selector: resolveExplicitSessionSelector(parsedSessionId, parsedOptions.repo),
+      state: parsedOptions.state,
     };
   }
 

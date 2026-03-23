@@ -1,6 +1,7 @@
 import type {
   AppliedCommentResult,
   ClearedCommentsResult,
+  HunkSelectionPayload,
   HunkSessionRegistration,
   HunkSessionSnapshot,
   NavigatedSelectionResult,
@@ -49,6 +50,8 @@ export class HunkHostClient {
   private stopped = false;
   private startupPromise: Promise<void> | null = null;
   private lastConnectionWarning: string | null = null;
+  private latestFocusedSelection: HunkSelectionPayload | null = null;
+  private latestPublishedSelection: HunkSelectionPayload | null = null;
 
   constructor(
     private registration: HunkSessionRegistration,
@@ -136,6 +139,25 @@ export class HunkHostClient {
     });
   }
 
+  updateSelection(state: "focused" | "published", selection: HunkSelectionPayload) {
+    if (state === "focused") {
+      this.latestFocusedSelection = selection;
+    } else {
+      this.latestPublishedSelection = selection;
+    }
+
+    this.send({
+      type: "selection",
+      sessionId: this.registration.sessionId,
+      state,
+      selection,
+    });
+  }
+
+  publishSelection(selection: HunkSelectionPayload) {
+    this.updateSelection("published", selection);
+  }
+
   private connect(config: ResolvedHunkMcpConfig) {
     if (this.stopped || this.websocket) {
       return;
@@ -152,6 +174,22 @@ export class HunkHostClient {
         registration: this.registration,
         snapshot: this.snapshot,
       });
+      if (this.latestFocusedSelection) {
+        this.send({
+          type: "selection",
+          sessionId: this.registration.sessionId,
+          state: "focused",
+          selection: this.latestFocusedSelection,
+        });
+      }
+      if (this.latestPublishedSelection) {
+        this.send({
+          type: "selection",
+          sessionId: this.registration.sessionId,
+          state: "published",
+          selection: this.latestPublishedSelection,
+        });
+      }
       void this.flushQueuedMessages();
     };
 

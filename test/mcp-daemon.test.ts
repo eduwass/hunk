@@ -3,8 +3,10 @@ import { HunkDaemonState, resolveSessionTarget } from "../src/mcp/daemonState";
 import type {
   AppliedCommentResult,
   ClearedCommentsResult,
+  HunkNotifyEvent,
   HunkSessionRegistration,
   HunkSessionSnapshot,
+  HunkSelectionPayload,
   ListedSession,
   NavigatedSelectionResult,
   ReloadedSessionResult,
@@ -94,6 +96,23 @@ function createLiveComment(
     line: 4,
     summary: "Review note",
     createdAt: "2026-03-22T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function createSelection(overrides: Partial<HunkSelectionPayload> = {}): HunkSelectionPayload {
+  return {
+    version: 1,
+    source: "hunk",
+    createdAt: "2026-03-22T00:00:00.000Z",
+    repoRoot: "/repo",
+    changesetTitle: "repo working tree",
+    filePath: "src/example.ts",
+    hunkIndex: 0,
+    oldRange: [1, 1],
+    newRange: [1, 2],
+    patch: "@@ -1,1 +1,2 @@\n-old\n+new",
+    prompt: "Selected hunk from Hunk: src/example.ts",
     ...overrides,
   };
 }
@@ -199,6 +218,53 @@ describe("Hunk MCP daemon state", () => {
     expect(state.listComments({ sessionId: "session-1" }, { filePath: "src/example.ts" })).toEqual([
       expect.objectContaining({ commentId: "comment-1" }),
     ]);
+  });
+
+  test("stores focused and published selections for CLI-backed reads", () => {
+    const state = new HunkDaemonState();
+    const socket = {
+      send() {},
+    };
+
+    state.registerSession(socket, createRegistration(), createSnapshot());
+    const focused = createSelection();
+    const published = createSelection({ filePath: "src/other.ts", hunkIndex: 1 });
+
+    state.updateSelection("session-1", "focused", focused);
+    state.updateSelection("session-1", "published", published);
+
+    expect(state.getSelection({ sessionId: "session-1" }, "focused")).toEqual(focused);
+    expect(state.getSelection({ sessionId: "session-1" }, "published")).toEqual(published);
+  });
+
+  test("streams typed notify events for session lifecycle and published selections", () => {
+    const state = new HunkDaemonState();
+    const socket = {
+      send() {},
+    };
+    const events: HunkNotifyEvent[] = [];
+    const unsubscribe = state.subscribeToNotifications((event) => {
+      events.push(event);
+    });
+
+    state.registerSession(socket, createRegistration(), createSnapshot());
+    state.updateSelection("session-1", "published", createSelection());
+    state.unregisterSocket(socket);
+    unsubscribe();
+
+    expect(events.map((event) => event.type)).toEqual([
+      "session.opened",
+      "selection.published",
+      "session.closed",
+    ]);
+    expect(events[1]).toMatchObject({
+      sequence: 2,
+      sessionId: "session-1",
+      data: {
+        filePath: "src/example.ts",
+        hunkIndex: 0,
+      },
+    });
   });
 
   test("routes a comment command to the live session and resolves the async result", async () => {

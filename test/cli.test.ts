@@ -238,6 +238,27 @@ describe("parseCli", () => {
     });
   });
 
+  test("parses session selection with an explicit state", async () => {
+    const parsed = await parseCli([
+      "bun",
+      "hunk",
+      "session",
+      "selection",
+      "session-1",
+      "--state",
+      "focused",
+      "--json",
+    ]);
+
+    expect(parsed).toEqual({
+      kind: "session",
+      action: "selection",
+      selector: { sessionId: "session-1" },
+      state: "focused",
+      output: "json",
+    });
+  });
+
   test("parses session reload with nested show syntax", async () => {
     const parsed = await parseCli([
       "bun",

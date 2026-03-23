@@ -8,6 +8,7 @@ import type {
   SessionCommentRemoveCommandInput,
   SessionNavigateCommandInput,
   SessionReloadCommandInput,
+  SessionSelectionCommandInput,
   SessionSelectorInput,
 } from "../core/types";
 import {
@@ -19,6 +20,7 @@ import { resolveHunkMcpConfig } from "../mcp/config";
 import type {
   AppliedCommentResult,
   ClearedCommentsResult,
+  HunkSelectionPayload,
   ListedSession,
   NavigatedSelectionResult,
   ReloadedSessionResult,
@@ -42,6 +44,7 @@ export interface HunkDaemonCliClient {
   listSessions(): Promise<ListedSession[]>;
   getSession(selector: SessionSelectorInput): Promise<ListedSession>;
   getSelectedContext(selector: SessionSelectorInput): Promise<SelectedSessionContext>;
+  getSelection(input: SessionSelectionCommandInput): Promise<HunkSelectionPayload | null>;
   navigateToHunk(input: SessionNavigateCommandInput): Promise<NavigatedSelectionResult>;
   reloadSession(input: SessionReloadCommandInput): Promise<ReloadedSessionResult>;
   addComment(input: SessionCommentAddCommandInput): Promise<AppliedCommentResult>;
@@ -54,6 +57,7 @@ const REQUIRED_ACTION_BY_COMMAND: Record<SessionCommandInput["action"], SessionD
   list: "list",
   get: "get",
   context: "context",
+  selection: "selection",
   navigate: "navigate",
   reload: "reload",
   "comment-add": "comment-add",
@@ -143,6 +147,16 @@ class HttpHunkDaemonCliClient implements HunkDaemonCliClient {
     return (
       await this.request<{ context: SelectedSessionContext }>({ action: "context", selector })
     ).context;
+  }
+
+  async getSelection(input: SessionSelectionCommandInput) {
+    return (
+      await this.request<{ selection: HunkSelectionPayload | null }>({
+        action: "selection",
+        selector: input.selector,
+        state: input.state,
+      })
+    ).selection;
   }
 
   async navigateToHunk(input: SessionNavigateCommandInput) {
@@ -502,6 +516,28 @@ function formatContextOutput(context: SelectedSessionContext) {
   ].join("\n");
 }
 
+function formatSelectionOutput(
+  selector: SessionSelectorInput,
+  state: SessionSelectionCommandInput["state"],
+  selection: HunkSelectionPayload | null,
+) {
+  if (!selection) {
+    return `No ${state} selection is available for ${formatSelector(selector)}.\n`;
+  }
+
+  return [
+    `Session: ${formatSelector(selector)}`,
+    `Selection state: ${state}`,
+    `File: ${selection.filePath}`,
+    `Hunk: ${selection.hunkIndex + 1}`,
+    `Old range: ${selection.oldRange[0]}..${selection.oldRange[1]}`,
+    `New range: ${selection.newRange[0]}..${selection.newRange[1]}`,
+    "",
+    selection.prompt.trimEnd(),
+    "",
+  ].join("\n");
+}
+
 function formatNavigationOutput(selector: SessionSelectorInput, result: NavigatedSelectionResult) {
   return `Focused ${result.filePath} hunk ${result.hunkIndex + 1} in ${formatSelector(selector)}.\n`;
 }
@@ -612,6 +648,15 @@ export async function runSessionCommand(input: SessionCommandInput) {
     case "context": {
       const context = await client.getSelectedContext(normalizedSelector!);
       return renderOutput(input.output, { context }, () => formatContextOutput(context));
+    }
+    case "selection": {
+      const selection = await client.getSelection({
+        ...input,
+        selector: normalizedSelector!,
+      });
+      return renderOutput(input.output, { selection }, () =>
+        formatSelectionOutput(input.selector, input.state, selection),
+      );
     }
     case "navigate": {
       const result = await client.navigateToHunk({

@@ -4,6 +4,10 @@ import type {
   ClearedCommentsResult,
   ClearCommentsToolInput,
   CommentToolInput,
+  HunkNotifyEvent,
+  HunkNotifyEventType,
+  HunkSelectionPayload,
+  HunkSelectionState,
   HunkSessionRegistration,
   HunkSessionSnapshot,
   ListedSession,
@@ -36,12 +40,25 @@ interface SessionEntry {
   socket: DaemonSessionSocket;
   connectedAt: string;
   lastSeenAt: string;
+  focusedSelection: HunkSelectionPayload | null;
+  publishedSelection: HunkSelectionPayload | null;
 }
 
 export interface SessionTargetSelector {
   sessionId?: string;
   sessionPath?: string;
   repoRoot?: string;
+}
+
+interface NotifySubscriberFilter {
+  sessionId?: string;
+  repoRoot?: string;
+  types?: HunkNotifyEventType[];
+}
+
+interface NotifySubscriber {
+  filter: NotifySubscriberFilter;
+  listener: (event: HunkNotifyEvent) => void;
 }
 
 function describeSessionChoices(sessions: ListedSession[]) {
@@ -57,6 +74,15 @@ function findSelectedFile(session: ListedSession) {
         file.previousPath === session.snapshot.selectedFilePath,
     ) ?? null
   );
+}
+
+function snapshotFocusIdentity(snapshot: HunkSessionSnapshot) {
+  return [
+    snapshot.selectedFilePath ?? "",
+    snapshot.selectedHunkIndex,
+    snapshot.selectedHunkOldRange?.join(":") ?? "",
+    snapshot.selectedHunkNewRange?.join(":") ?? "",
+  ].join("|");
 }
 
 /** Resolve which live Hunk session one external command should target. */
@@ -124,6 +150,8 @@ export class HunkDaemonState {
   private sessions = new Map<string, SessionEntry>();
   private sessionIdsBySocket = new Map<DaemonSessionSocket, string>();
   private pendingCommands = new Map<string, PendingCommand>();
+  private notifySubscribers = new Set<NotifySubscriber>();
+  private nextEventSequence = 1;
 
   listSessions(): ListedSession[] {
     return [...this.sessions.values()]
@@ -172,6 +200,19 @@ export class HunkDaemonState {
     };
   }
 
+  getSelection(
+    selector: SessionTargetSelector,
+    state: HunkSelectionState,
+  ): HunkSelectionPayload | null {
+    const session = resolveSessionTarget(this.listSessions(), selector);
+    const entry = this.sessions.get(session.sessionId);
+    if (!entry) {
+      throw new Error("The targeted Hunk session is no longer connected.");
+    }
+
+    return state === "focused" ? entry.focusedSelection : entry.publishedSelection;
+  }
+
   listComments(selector: SessionTargetSelector, filter: { filePath?: string } = {}) {
     const session = this.getSession(selector);
     const comments = session.snapshot.liveComments;
@@ -185,6 +226,17 @@ export class HunkDaemonState {
 
   getSessionCount() {
     return this.sessions.size;
+  }
+
+  subscribeToNotifications(
+    listener: (event: HunkNotifyEvent) => void,
+    filter: NotifySubscriberFilter = {},
+  ) {
+    const subscriber: NotifySubscriber = { listener, filter };
+    this.notifySubscribers.add(subscriber);
+    return () => {
+      this.notifySubscribers.delete(subscriber);
+    };
   }
 
   getPendingCommandCount() {
@@ -217,8 +269,15 @@ export class HunkDaemonState {
       socket,
       connectedAt: now,
       lastSeenAt: now,
+      focusedSelection: existing?.focusedSelection ?? null,
+      publishedSelection: existing?.publishedSelection ?? null,
     });
     this.sessionIdsBySocket.set(socket, registration.sessionId);
+    this.emitEvent(registration.sessionId, "session.opened", {
+      title: registration.title,
+      inputKind: registration.inputKind,
+      sourceLabel: registration.sourceLabel,
+    });
   }
 
   updateSnapshot(sessionId: string, snapshot: HunkSessionSnapshot) {
@@ -227,10 +286,46 @@ export class HunkDaemonState {
       return;
     }
 
+    const previousSnapshot = entry.snapshot;
     this.sessions.set(sessionId, {
       ...entry,
       snapshot,
       lastSeenAt: new Date().toISOString(),
+    });
+
+    if (snapshotFocusIdentity(previousSnapshot) !== snapshotFocusIdentity(snapshot)) {
+      this.emitEvent(sessionId, "focus.changed", {
+        filePath: snapshot.selectedFilePath,
+        hunkIndex: snapshot.selectedHunkIndex,
+        oldRange: snapshot.selectedHunkOldRange,
+        newRange: snapshot.selectedHunkNewRange,
+      });
+    }
+  }
+
+  updateSelection(sessionId: string, state: HunkSelectionState, selection: HunkSelectionPayload) {
+    const entry = this.sessions.get(sessionId);
+    if (!entry) {
+      return;
+    }
+
+    const nextEntry: SessionEntry = {
+      ...entry,
+      focusedSelection: state === "focused" ? selection : entry.focusedSelection,
+      publishedSelection: state === "published" ? selection : entry.publishedSelection,
+      lastSeenAt: new Date().toISOString(),
+    };
+    this.sessions.set(sessionId, nextEntry);
+
+    if (state === "focused") {
+      return;
+    }
+
+    this.emitEvent(sessionId, "selection.published", {
+      filePath: selection.filePath,
+      hunkIndex: selection.hunkIndex,
+      oldRange: selection.oldRange,
+      newRange: selection.newRange,
     });
   }
 
@@ -350,6 +445,7 @@ export class HunkDaemonState {
       pending.reject(error);
     }
 
+    this.notifySubscribers.clear();
     this.sessionIdsBySocket.clear();
     this.sessions.clear();
   }
@@ -415,6 +511,7 @@ export class HunkDaemonState {
       return;
     }
 
+    this.emitEvent(sessionId, "session.closed", { reason });
     this.sessions.delete(sessionId);
     if (this.sessionIdsBySocket.get(entry.socket) === sessionId) {
       this.sessionIdsBySocket.delete(entry.socket);
@@ -432,6 +529,36 @@ export class HunkDaemonState {
       clearTimeout(pending.timeout);
       this.pendingCommands.delete(requestId);
       pending.reject(error);
+    }
+  }
+
+  private emitEvent(sessionId: string, type: HunkNotifyEventType, data: Record<string, unknown>) {
+    const entry = this.sessions.get(sessionId);
+    const event: HunkNotifyEvent = {
+      type,
+      version: 1,
+      sessionId,
+      repoRoot: entry?.registration.repoRoot,
+      sequence: this.nextEventSequence,
+      timestamp: new Date().toISOString(),
+      data,
+    };
+    this.nextEventSequence += 1;
+
+    for (const subscriber of this.notifySubscribers) {
+      if (subscriber.filter.sessionId && subscriber.filter.sessionId !== event.sessionId) {
+        continue;
+      }
+
+      if (subscriber.filter.repoRoot && subscriber.filter.repoRoot !== event.repoRoot) {
+        continue;
+      }
+
+      if (subscriber.filter.types && !subscriber.filter.types.includes(event.type)) {
+        continue;
+      }
+
+      subscriber.listener(event);
     }
   }
 }

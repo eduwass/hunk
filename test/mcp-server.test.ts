@@ -211,6 +211,7 @@ describe("Hunk session daemon server", () => {
           "list",
           "get",
           "context",
+          "selection",
           "navigate",
           "reload",
           "comment-add",
@@ -219,6 +220,17 @@ describe("Hunk session daemon server", () => {
           "comment-clear",
         ],
       });
+
+      const health = await fetch(`http://127.0.0.1:${port}/health`);
+      expect(health.status).toBe(200);
+      await expect(health.json()).resolves.toMatchObject({
+        notify: `http://127.0.0.1:${port}/notify`,
+      });
+
+      const notify = await fetch(`http://127.0.0.1:${port}/notify`);
+      expect(notify.status).toBe(200);
+      expect(notify.headers.get("content-type")).toContain("text/event-stream");
+      notify.body?.cancel();
 
       const legacyMcp = await fetch(`http://127.0.0.1:${port}/mcp`, {
         method: "POST",

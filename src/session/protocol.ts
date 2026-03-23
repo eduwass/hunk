@@ -5,11 +5,13 @@ import type {
   SessionCommentRemoveCommandInput,
   SessionNavigateCommandInput,
   SessionReloadCommandInput,
+  SessionSelectionCommandInput,
   SessionSelectorInput,
 } from "../core/types";
 import type {
   AppliedCommentResult,
   ClearedCommentsResult,
+  HunkSelectionPayload,
   ListedSession,
   NavigatedSelectionResult,
   ReloadedSessionResult,
@@ -20,12 +22,14 @@ import type {
 
 export const HUNK_SESSION_API_PATH = "/session-api";
 export const HUNK_SESSION_CAPABILITIES_PATH = `${HUNK_SESSION_API_PATH}/capabilities`;
+export const HUNK_NOTIFY_API_PATH = "/notify";
 export const HUNK_SESSION_API_VERSION = 1;
 
 export type SessionDaemonAction =
   | "list"
   | "get"
   | "context"
+  | "selection"
   | "navigate"
   | "reload"
   | "comment-add"
@@ -49,6 +53,11 @@ export type SessionDaemonRequest =
   | {
       action: "context";
       selector: SessionSelectorInput;
+    }
+  | {
+      action: "selection";
+      selector: SessionSelectionCommandInput["selector"];
+      state: SessionSelectionCommandInput["state"];
     }
   | {
       action: "navigate";
@@ -96,6 +105,7 @@ export type SessionDaemonResponse =
   | { sessions: ListedSession[] }
   | { session: ListedSession }
   | { context: SelectedSessionContext }
+  | { selection: HunkSelectionPayload | null }
   | { result: NavigatedSelectionResult }
   | { result: ReloadedSessionResult }
   | { result: AppliedCommentResult }

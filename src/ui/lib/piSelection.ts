@@ -2,26 +2,11 @@ import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { hunkLineRange } from "../../core/liveComments";
 import type { Changeset, DiffFile } from "../../core/types";
+import type { HunkSelectionPayload } from "../../mcp/types";
 
 const PI_SELECTION_RELATIVE_PATH = ".hunk/pi-selection.json";
 
 type DiffHunk = DiffFile["metadata"]["hunks"][number];
-
-export interface PiSelectionPayload {
-  version: 1;
-  source: "hunk";
-  createdAt: string;
-  repoRoot?: string;
-  selectionPath: string;
-  changesetTitle: string;
-  filePath: string;
-  previousPath?: string;
-  hunkIndex: number;
-  oldRange: [number, number];
-  newRange: [number, number];
-  patch: string;
-  prompt: string;
-}
 
 /** Reuse the git repo root source label when this changeset came from a repo-backed review. */
 function resolveRepoRoot(changeset: Changeset) {
@@ -40,8 +25,8 @@ function hunkHeader(hunk: DiffHunk) {
   return hunk.hunkContext ? `${specs} ${hunk.hunkContext}` : specs;
 }
 
-/** Rebuild one hunk as a compact diff snippet suitable for pasting into pi. */
-export function buildPiSelectionPatch(file: DiffFile, hunkIndex: number) {
+/** Rebuild one hunk as a compact diff snippet suitable for pasting into an agent. */
+export function buildHunkSelectionPatch(file: DiffFile, hunkIndex: number) {
   const hunk = file.metadata.hunks[hunkIndex];
   if (!hunk) {
     return null;
@@ -77,16 +62,15 @@ export function buildPiSelectionPatch(file: DiffFile, hunkIndex: number) {
   return lines.join("\n");
 }
 
-/** Build the payload the pi extension watches and pastes into the editor. */
-export function buildPiSelectionPayload(changeset: Changeset, file: DiffFile, hunkIndex: number) {
+/** Build the current focused hunk as a generic agent-readable payload. */
+export function buildHunkSelectionPayload(changeset: Changeset, file: DiffFile, hunkIndex: number) {
   const hunk = file.metadata.hunks[hunkIndex];
-  const patch = buildPiSelectionPatch(file, hunkIndex);
+  const patch = buildHunkSelectionPatch(file, hunkIndex);
   if (!hunk || !patch) {
     return null;
   }
 
   const repoRoot = resolveRepoRoot(changeset);
-  const selectionPath = resolve(repoRoot ?? process.cwd(), PI_SELECTION_RELATIVE_PATH);
   const { oldRange, newRange } = hunkLineRange(hunk);
   const prompt = [
     `Selected hunk from Hunk: ${file.path}`,
@@ -105,7 +89,6 @@ export function buildPiSelectionPayload(changeset: Changeset, file: DiffFile, hu
     source: "hunk" as const,
     createdAt: new Date().toISOString(),
     repoRoot,
-    selectionPath,
     changesetTitle: changeset.title,
     filePath: file.path,
     previousPath: file.previousPath,
@@ -114,12 +97,20 @@ export function buildPiSelectionPayload(changeset: Changeset, file: DiffFile, hu
     newRange,
     patch,
     prompt,
-  } satisfies PiSelectionPayload;
+  } satisfies HunkSelectionPayload;
+}
+
+export function resolvePiSelectionPath(repoRoot?: string) {
+  return resolve(repoRoot ?? process.cwd(), PI_SELECTION_RELATIVE_PATH);
 }
 
 /** Persist the current Hunk selection where the project-local pi extension can pick it up. */
-export function writePiSelectionPayload(payload: PiSelectionPayload) {
-  mkdirSync(dirname(payload.selectionPath), { recursive: true });
-  writeFileSync(payload.selectionPath, `${JSON.stringify(payload, null, 2)}\n`);
-  return payload.selectionPath;
+export function writePiSelectionPayload(payload: HunkSelectionPayload) {
+  const selectionPath = resolvePiSelectionPath(payload.repoRoot);
+  mkdirSync(dirname(selectionPath), { recursive: true });
+  writeFileSync(selectionPath, `${JSON.stringify({ ...payload, selectionPath }, null, 2)}\n`);
+  return selectionPath;
 }
+
+export const buildPiSelectionPatch = buildHunkSelectionPatch;
+export const buildPiSelectionPayload = buildHunkSelectionPayload;

@@ -4,7 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseDiffFromFile } from "@pierre/diffs";
 import type { Changeset, DiffFile } from "../src/core/types";
-import { buildPiSelectionPatch, buildPiSelectionPayload } from "../src/ui/lib/piSelection";
+import {
+  buildPiSelectionPatch,
+  buildPiSelectionPayload,
+  resolvePiSelectionPath,
+} from "../src/ui/lib/piSelection";
 
 function createDiffFile(id: string, path: string, before: string, after: string): DiffFile {
   const metadata = parseDiffFromFile(
@@ -74,7 +78,9 @@ describe("pi selection bridge payloads", () => {
       expect(payload?.hunkIndex).toBe(0);
       expect(payload?.oldRange).toEqual([1, 1]);
       expect(payload?.newRange).toEqual([1, 2]);
-      expect(payload?.selectionPath).toBe(join(repoRoot, ".hunk", "pi-selection.json"));
+      expect(resolvePiSelectionPath(payload?.repoRoot)).toBe(
+        join(repoRoot, ".hunk", "pi-selection.json"),
+      );
       expect(payload?.prompt).toContain("Selected hunk from Hunk: alpha.ts");
       expect(payload?.prompt).toContain("```diff");
     } finally {

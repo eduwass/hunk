@@ -17,6 +17,39 @@ export interface SessionFileSummary {
   hunkCount: number;
 }
 
+export interface HunkSelectionPayload {
+  version: 1;
+  source: "hunk";
+  createdAt: string;
+  repoRoot?: string;
+  changesetTitle: string;
+  filePath: string;
+  previousPath?: string;
+  hunkIndex: number;
+  oldRange: [number, number];
+  newRange: [number, number];
+  patch: string;
+  prompt: string;
+}
+
+export type HunkSelectionState = "focused" | "published";
+
+export type HunkNotifyEventType =
+  | "session.opened"
+  | "session.closed"
+  | "focus.changed"
+  | "selection.published";
+
+export interface HunkNotifyEvent {
+  type: HunkNotifyEventType;
+  version: 1;
+  sessionId: string;
+  repoRoot?: string;
+  sequence: number;
+  timestamp: string;
+  data: Record<string, unknown>;
+}
+
 export interface SelectedHunkSummary {
   index: number;
   oldRange?: [number, number];
@@ -186,6 +219,12 @@ export type SessionClientMessage =
       type: "snapshot";
       sessionId: string;
       snapshot: HunkSessionSnapshot;
+    }
+  | {
+      type: "selection";
+      sessionId: string;
+      state: HunkSelectionState;
+      selection: HunkSelectionPayload;
     }
   | {
       type: "heartbeat";

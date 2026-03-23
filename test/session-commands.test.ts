@@ -49,6 +49,7 @@ function createClient(overrides: Partial<HunkDaemonCliClient>): HunkDaemonCliCli
         "list",
         "get",
         "context",
+        "selection",
         "navigate",
         "reload",
         "comment-add",
@@ -80,6 +81,7 @@ function createClient(overrides: Partial<HunkDaemonCliClient>): HunkDaemonCliCli
       showAgentNotes: false,
       liveCommentCount: 0,
     }),
+    getSelection: async () => null,
     navigateToHunk: async () => ({
       fileId: "file-1",
       filePath: "README.md",
@@ -320,6 +322,7 @@ describe("session command compatibility checks", () => {
               "list",
               "get",
               "context",
+              "selection",
               "navigate",
               "reload",
               "comment-add",
@@ -386,6 +389,56 @@ describe("session command compatibility checks", () => {
     expect(JSON.parse(output)).toMatchObject({
       result: {
         sessionId: "session-1",
+      },
+    });
+  });
+
+  test("returns a published selection payload through the CLI state read path", async () => {
+    setSessionCommandTestHooks({
+      createClient: () =>
+        createClient({
+          getSelection: async (input) => {
+            expect(input.selector).toEqual({ sessionId: "session-1" });
+            expect(input.state).toBe("published");
+            return {
+              version: 1,
+              source: "hunk",
+              createdAt: "2026-03-22T00:00:00.000Z",
+              repoRoot: "/repo",
+              changesetTitle: "repo diff",
+              filePath: "README.md",
+              hunkIndex: 0,
+              oldRange: [1, 1],
+              newRange: [1, 2],
+              patch: "@@ -1,1 +1,2 @@\n-old\n+new",
+              prompt: "Selected hunk from Hunk: README.md",
+            };
+          },
+        }),
+      resolveDaemonAvailability: async () => true,
+    });
+
+    const output = await runSessionCommand({
+      kind: "session",
+      action: "selection",
+      selector: { sessionId: "session-1" },
+      state: "published",
+      output: "json",
+    } satisfies SessionCommandInput);
+
+    expect(JSON.parse(output)).toEqual({
+      selection: {
+        version: 1,
+        source: "hunk",
+        createdAt: "2026-03-22T00:00:00.000Z",
+        repoRoot: "/repo",
+        changesetTitle: "repo diff",
+        filePath: "README.md",
+        hunkIndex: 0,
+        oldRange: [1, 1],
+        newRange: [1, 2],
+        patch: "@@ -1,1 +1,2 @@\n-old\n+new",
+        prompt: "Selected hunk from Hunk: README.md",
       },
     });
   });
