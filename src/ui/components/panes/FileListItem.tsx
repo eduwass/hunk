@@ -1,26 +1,29 @@
+import { fileIcon } from "../../lib/fileIcons";
 import type { FileGroupEntry, FileListEntry } from "../../lib/files";
 import { fitText, padText } from "../../lib/text";
 import type { AppTheme } from "../../themes";
 import { fileRowId } from "../../lib/ids";
 
-/** Get icon and color for file state using standard git status codes. */
+/** Get nerd font file icon with color based on git status. */
 function getFileStateIcon(entry: FileListEntry, theme: AppTheme): { icon: string; color: string } {
+  const icon = fileIcon(entry.name);
+
   if (entry.isUntracked) {
-    return { icon: "?", color: theme.fileUntracked };
+    return { icon, color: theme.fileUntracked };
   }
 
   switch (entry.changeType) {
     case "new":
-      return { icon: "A", color: theme.fileNew };
+      return { icon, color: theme.fileNew };
     case "deleted":
-      return { icon: "D", color: theme.fileDeleted };
+      return { icon, color: theme.fileDeleted };
     case "rename-pure":
     case "rename-changed":
-      return { icon: "R", color: theme.fileRenamed };
+      return { icon, color: theme.fileRenamed };
     case "change":
-      return { icon: "M", color: theme.fileModified };
+      return { icon, color: theme.fileModified };
     default:
-      return { icon: "", color: theme.text };
+      return { icon, color: theme.text };
   }
 }
 
