@@ -183,7 +183,7 @@ export const VerticalScrollbar = forwardRef<VerticalScrollbarHandle, VerticalScr
             left: 0,
             width: SCROLLBAR_WIDTH,
             height: thumbHeight,
-            backgroundColor: isDraggingState ? theme.accent : theme.accentMuted,
+            backgroundColor: isDraggingState ? theme.accentMuted : theme.accent,
           }}
           onMouseDown={handleMouseDown}
           onMouseDrag={handleMouseDrag}
