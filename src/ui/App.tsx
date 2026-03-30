@@ -118,6 +118,7 @@ export function App({
   const [showLineNumbers, setShowLineNumbers] = useState(bootstrap.initialShowLineNumbers ?? true);
   const [wrapLines, setWrapLines] = useState(bootstrap.initialWrapLines ?? false);
   const [showHunkHeaders, setShowHunkHeaders] = useState(bootstrap.initialShowHunkHeaders ?? true);
+  const [zenMode, setZenMode] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [forceSidebarOpen, setForceSidebarOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -188,7 +189,7 @@ export function App({
   const hunkCursors = buildHunkCursors(filteredFiles);
   const annotatedHunkCursors = buildAnnotatedHunkCursors(filteredFiles);
 
-  const bodyPadding = pagerMode ? 0 : BODY_PADDING;
+  const bodyPadding = pagerMode || zenMode ? 0 : BODY_PADDING;
   const bodyWidth = Math.max(0, terminal.width - bodyPadding);
   const responsiveLayout = resolveResponsiveLayout(layoutMode, terminal.width);
   const canForceShowFilesPane = bodyWidth >= FILES_MIN_WIDTH + DIVIDER_WIDTH + DIFF_MIN_WIDTH;
@@ -969,6 +970,12 @@ export function App({
       return;
     }
 
+    if (key.name === "z" || key.sequence === "z") {
+      setZenMode((prev) => !prev);
+      closeMenu();
+      return;
+    }
+
     if (key.name === "[") {
       moveHunk(-1);
       closeMenu();
@@ -1003,7 +1010,7 @@ export function App({
         backgroundColor: activeTheme.background,
       }}
     >
-      {!pagerMode ? (
+      {!pagerMode && !zenMode ? (
         <MenuBar
           activeMenuId={activeMenuId}
           menuSpecs={menuSpecs}
@@ -1069,6 +1076,7 @@ export function App({
           diffContentWidth={diffContentWidth}
           files={filteredFiles}
           pagerMode={pagerMode}
+          zenMode={zenMode}
           headerLabelWidth={diffHeaderLabelWidth}
           headerStatsWidth={diffHeaderStatsWidth}
           layout={resolvedLayout}
@@ -1089,7 +1097,7 @@ export function App({
         />
       </box>
 
-      {!pagerMode && (focusArea === "filter" || Boolean(filter) || Boolean(noticeText)) ? (
+      {!pagerMode && !zenMode && (focusArea === "filter" || Boolean(filter) || Boolean(noticeText)) ? (
         <StatusBar
           filter={filter}
           filterFocused={focusArea === "filter"}

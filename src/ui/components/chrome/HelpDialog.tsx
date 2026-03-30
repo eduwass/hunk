@@ -37,6 +37,7 @@ export function HelpDialog({
         ["s / t", "sidebar / theme"],
         ["a", "toggle AI notes"],
         ["l / w / m", "lines / wrap / metadata"],
+        ["z", "zen mode (hide chrome)"],
       ],
     },
     {

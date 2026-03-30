@@ -132,6 +132,7 @@ export function DiffPane({
   scrollToNote = false,
   separatorWidth,
   pagerMode = false,
+  zenMode = false,
   showAgentNotes,
   showLineNumbers,
   showHunkHeaders,
@@ -153,6 +154,7 @@ export function DiffPane({
   scrollToNote?: boolean;
   separatorWidth: number;
   pagerMode?: boolean;
+  zenMode?: boolean;
   showAgentNotes: boolean;
   showLineNumbers: boolean;
   showHunkHeaders: boolean;
@@ -633,10 +635,10 @@ export function DiffPane({
     <box
       style={{
         width,
-        border: pagerMode ? [] : ["top"],
+        border: pagerMode || zenMode ? [] : ["top"],
         borderColor: theme.border,
         backgroundColor: theme.panel,
-        paddingY: pagerMode ? 0 : 1,
+        paddingY: pagerMode || zenMode ? 0 : 1,
         paddingX: 0,
         flexDirection: "column",
       }}
@@ -688,7 +690,7 @@ export function DiffPane({
                       file.id === selectedFileId ? handleSelectedHighlightReady : undefined
                     }
                     separatorWidth={separatorWidth}
-                    showSeparator={index > 0}
+                    showSeparator={!zenMode && index > 0}
                     showLineNumbers={showLineNumbers}
                     showHunkHeaders={showHunkHeaders}
                     wrapLines={wrapLines}
@@ -710,7 +712,7 @@ export function DiffPane({
                     headerLabelWidth={headerLabelWidth}
                     headerStatsWidth={headerStatsWidth}
                     separatorWidth={separatorWidth}
-                    showSeparator={index > 0}
+                    showSeparator={!zenMode && index > 0}
                     theme={theme}
                     onSelect={() => onSelectFile(file.id)}
                   />
