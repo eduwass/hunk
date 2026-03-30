@@ -1053,6 +1053,7 @@ export function App({
               textWidth={filesTextWidth}
               theme={activeTheme}
               width={clampedFilesPaneWidth}
+              zenMode={zenMode}
               onSelectFile={(fileId) => {
                 setFocusArea("files");
                 jumpToFile(fileId);
@@ -1064,6 +1065,7 @@ export function App({
               dividerHitWidth={DIVIDER_HIT_WIDTH}
               isResizing={isResizingFilesPane}
               theme={activeTheme}
+              zenMode={zenMode}
               onMouseDown={beginFilesPaneResize}
               onMouseDrag={updateFilesPaneResize}
               onMouseDragEnd={endFilesPaneResize}

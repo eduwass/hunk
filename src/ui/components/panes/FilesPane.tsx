@@ -12,6 +12,7 @@ export function FilesPane({
   textWidth,
   theme,
   width,
+  zenMode = false,
   onSelectFile,
 }: {
   entries: SidebarEntry[];
@@ -20,6 +21,7 @@ export function FilesPane({
   textWidth: number;
   theme: AppTheme;
   width: number;
+  zenMode?: boolean;
   onSelectFile: (fileId: string) => void;
 }) {
   const fileEntries = entries.filter((entry) => entry.kind === "file");
@@ -30,10 +32,10 @@ export function FilesPane({
     <box
       style={{
         width,
-        border: ["top"],
+        border: zenMode ? [] : ["top"],
         borderColor: theme.border,
         backgroundColor: theme.panel,
-        paddingY: 1,
+        paddingY: zenMode ? 0 : 1,
         paddingX: 0,
         flexDirection: "column",
       }}

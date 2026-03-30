@@ -7,6 +7,7 @@ export function PaneDivider({
   dividerHitWidth,
   isResizing,
   theme,
+  zenMode = false,
   onMouseDown,
   onMouseDrag,
   onMouseDragEnd,
@@ -16,6 +17,7 @@ export function PaneDivider({
   dividerHitWidth: number;
   isResizing: boolean;
   theme: AppTheme;
+  zenMode?: boolean;
   onMouseDown: (event: TuiMouseEvent) => void;
   onMouseDrag: (event: TuiMouseEvent) => void;
   onMouseDragEnd: (event: TuiMouseEvent) => void;
@@ -26,8 +28,8 @@ export function PaneDivider({
       <box
         style={{
           width: 1,
-          border: ["top", "left"],
-          borderColor: isResizing ? theme.accent : theme.border,
+          border: zenMode ? ["left"] : ["top", "left"],
+          borderColor: isResizing ? theme.accent : zenMode ? theme.panel : theme.border,
           backgroundColor: isResizing ? theme.accentMuted : theme.panel,
         }}
         customBorderChars={{
