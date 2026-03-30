@@ -1,13 +1,21 @@
-/** Copy text to the system clipboard using the OSC 52 terminal escape sequence.
- *  Wraps in tmux passthrough when running inside tmux so it reaches the outer terminal. */
-export function copyToClipboard(text: string) {
-  const encoded = Buffer.from(text).toString("base64");
-  const osc = `\x1b]52;c;${encoded}\x07`;
+import { execSync } from "node:child_process";
 
-  if (process.env.TMUX) {
-    // tmux requires DCS passthrough wrapping
-    process.stdout.write(`\x1bPtmux;\x1b${osc}\x1b\\`);
-  } else {
-    process.stdout.write(osc);
+/** Copy text to the system clipboard using platform-native tools.
+ *  Linux: xclip via DISPLAY (works over SSH with Xvfb).
+ *  macOS: pbcopy. */
+export function copyToClipboard(text: string) {
+  try {
+    if (process.platform === "darwin") {
+      execSync("pbcopy", { input: text, stdio: ["pipe", "ignore", "ignore"] });
+    } else {
+      const display = process.env.DISPLAY || ":0";
+      execSync(`xclip -selection clipboard`, {
+        input: text,
+        stdio: ["pipe", "ignore", "ignore"],
+        env: { ...process.env, DISPLAY: display },
+      });
+    }
+  } catch {
+    // Silently fail — clipboard may not be available in all environments
   }
 }
