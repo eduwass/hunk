@@ -31,7 +31,9 @@ import { buildAppMenus } from "./lib/appMenus";
 import { buildSidebarEntries, filterReviewFiles, mergeFileAnnotationsByFileId } from "./lib/files";
 import { buildAnnotatedHunkCursors, buildHunkCursors, findNextHunkCursor } from "./lib/hunks";
 import { fileRowId } from "./lib/ids";
+import { copyToClipboard } from "./lib/clipboard";
 import {
+  buildHunkSelectionPatch,
   buildHunkSelectionPayload,
   buildPiSelectionPayload,
   writePiSelectionPayload,
@@ -536,6 +538,25 @@ export function App({
     );
   }, [bootstrap.changeset, flashStatusMessage, hostClient, selectedFile, selectedHunkIndex]);
 
+  /** Copy the focused hunk's diff patch to the system clipboard via OSC 52. */
+  const copyHunkToClipboard = useCallback(() => {
+    if (!selectedFile) {
+      flashStatusMessage("No file selected.");
+      return;
+    }
+
+    const patch = buildHunkSelectionPatch(selectedFile, selectedHunkIndex);
+    if (!patch) {
+      flashStatusMessage("No hunk selected.");
+      return;
+    }
+
+    copyToClipboard(patch);
+    flashStatusMessage(
+      `Copied ${selectedFile.path} hunk ${selectedHunkIndex + 1} to clipboard.`,
+    );
+  }, [flashStatusMessage, selectedFile, selectedHunkIndex]);
+
   const menus = useMemo(
     () =>
       buildAppMenus({
@@ -938,6 +959,12 @@ export function App({
 
     if (key.name === "p" || key.sequence === "p") {
       sendSelectionToPi();
+      closeMenu();
+      return;
+    }
+
+    if (key.name === "y" || key.sequence === "y") {
+      copyHunkToClipboard();
       closeMenu();
       return;
     }

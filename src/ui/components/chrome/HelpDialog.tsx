@@ -45,6 +45,7 @@ export function HelpDialog({
         ["/", "focus file filter"],
         ["Tab", "toggle files/filter focus"],
         ["p", "export hunk to pi"],
+        ["y", "copy hunk to clipboard"],
         ["F10", "open menus"],
         [canRefresh ? "r / q" : "q", canRefresh ? "reload / quit" : "quit"],
       ],
