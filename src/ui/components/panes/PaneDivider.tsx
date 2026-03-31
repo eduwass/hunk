@@ -28,8 +28,9 @@ export function PaneDivider({
       <box
         style={{
           width: 1,
-          border: zenMode ? ["left"] : ["top", "left"],
-          borderColor: isResizing ? theme.accent : zenMode ? theme.panel : theme.border,
+          border: zenMode ? [] : ["top", "left"],
+          borderColor: isResizing ? theme.accent : zenMode ? theme.background : theme.border,
+          backgroundColor: isResizing ? theme.accentMuted : zenMode ? theme.background : theme.panel,
           backgroundColor: isResizing ? theme.accentMuted : theme.panel,
         }}
         customBorderChars={{

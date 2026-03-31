@@ -749,7 +749,11 @@ describe("App interactions", () => {
     });
 
     try {
-      await flush(setup);
+      // Wait for initial render AND highlight cache to fully populate
+      for (let i = 0; i < 10; i++) {
+        await flush(setup);
+        await Bun.sleep(50);
+      }
       let frame = setup.captureCharFrame();
       expect(frame).toContain("first change");
       expect(frame).not.toContain("second change");
@@ -822,6 +826,66 @@ describe("App interactions", () => {
           break;
         }
         await Bun.sleep(25);
+      }
+
+      if (!refreshed) {
+        const lines = frame.split("\n").filter((l: string) => l.includes("change") || l.includes("test.txt"));
+        console.log("R-RELOAD FRAME:", lines);
+      }
+      if (!refreshed) {
+        console.error("STALE FRAME:", frame.split("\n").slice(0, 15).join("\n"));
+      }
+      expect(refreshed).toBe(true);
+    } finally {
+      await act(async () => {
+        setup.renderer.destroy();
+      });
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  test("watch mode reflects updated git working tree content", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "hunk-git-watch-"));
+    const file = join(dir, "test.txt");
+
+    execSync("git init && git config user.email test@test && git config user.name test", { cwd: dir });
+    writeFileSync(file, "original line\n");
+    execSync("git add . && git commit -m init", { cwd: dir });
+
+    writeFileSync(file, "original line\nfirst change\n");
+
+    const bootstrap = await loadAppBootstrap(
+      { kind: "git", staged: false, options: { mode: "stack", watch: true } },
+      { cwd: dir },
+    );
+
+    const setup = await testRender(<AppHost bootstrap={bootstrap} />, {
+      width: 120,
+      height: 20,
+    });
+
+    try {
+      await flush(setup);
+      let frame = setup.captureCharFrame();
+      expect(frame).toContain("first change");
+
+      // Modify the file — watch mode should auto-reload
+      writeFileSync(file, "original line\nsecond change\n");
+
+      let refreshed = false;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        await flush(setup);
+        frame = setup.captureCharFrame();
+        if (frame.includes("second change") && !frame.includes("first change")) {
+          refreshed = true;
+          break;
+        }
+        await Bun.sleep(100);
+      }
+
+      if (!refreshed) {
+        const lines = frame.split("\n").filter((l: string) => l.includes("change"));
+        console.log("WATCH FRAME:", lines);
       }
 
       expect(refreshed).toBe(true);

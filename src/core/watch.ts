@@ -30,10 +30,10 @@ function statSignature(path: string) {
 }
 
 /** Build the cheaper watch signature for working-tree git diff inputs without rendering full untracked patches. */
-function gitWorkingTreeWatchSignature(input: Extract<CliInput, { kind: "git" }>) {
-  const trackedPatch = runGitText({ input, args: buildGitDiffArgs(input) });
-  const repoRoot = resolveGitRepoRoot(input);
-  const untrackedSignatures = listGitUntrackedFiles(input).map(
+function gitWorkingTreeWatchSignature(input: Extract<CliInput, { kind: "git" }>, cwd?: string) {
+  const trackedPatch = runGitText({ input, args: buildGitDiffArgs(input), cwd });
+  const repoRoot = resolveGitRepoRoot(input, { cwd });
+  const untrackedSignatures = listGitUntrackedFiles(input, { cwd }).map(
     (filePath) => `untracked:${statSignature(join(repoRoot, filePath))}`,
   );
 
@@ -41,19 +41,19 @@ function gitWorkingTreeWatchSignature(input: Extract<CliInput, { kind: "git" }>)
 }
 
 /** Build one exact patch signature for Git-backed review inputs. */
-function gitPatchSignature(input: Extract<CliInput, { kind: "git" | "show" | "stash-show" }>) {
+function gitPatchSignature(input: Extract<CliInput, { kind: "git" | "show" | "stash-show" }>, cwd?: string) {
   switch (input.kind) {
     case "git":
-      return gitWorkingTreeWatchSignature(input);
+      return gitWorkingTreeWatchSignature(input, cwd);
     case "show":
-      return runGitText({ input, args: buildGitShowArgs(input) });
+      return runGitText({ input, args: buildGitShowArgs(input), cwd });
     case "stash-show":
-      return runGitText({ input, args: buildGitStashShowArgs(input) });
+      return runGitText({ input, args: buildGitStashShowArgs(input), cwd });
   }
 }
 
 /** Compute a change-detection signature for one watchable input. */
-export function computeWatchSignature(input: CliInput) {
+export function computeWatchSignature(input: CliInput, cwd?: string) {
   const parts: string[] = [input.kind];
 
   switch (input.kind) {
