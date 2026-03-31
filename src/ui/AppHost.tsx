@@ -10,6 +10,7 @@ import {
   updateSessionRegistration,
 } from "../mcp/sessionRegistration";
 import { App } from "./App";
+import { flushHighlightCache } from "./diff/useHighlightedDiff";
 import { useStartupUpdateNotice } from "./hooks/useStartupUpdateNotice";
 
 /** Keep one live Hunk app mounted while allowing daemon-driven session reloads. */
@@ -59,6 +60,7 @@ export function AppHost({
         hostClient.replaceSession(nextRegistration, nextSnapshot);
       }
 
+      flushHighlightCache();
       setActiveBootstrap(nextBootstrap);
       if (options?.resetApp !== false) {
         // Bumping the key forces a full App remount. Callers that pass `resetApp: false` get a

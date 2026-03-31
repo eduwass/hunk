@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -710,6 +711,62 @@ describe("App interactions", () => {
         await flush(setup);
         frame = setup.captureCharFrame();
         if (frame.includes("export const added = true;")) {
+          refreshed = true;
+          break;
+        }
+        await Bun.sleep(25);
+      }
+
+      expect(refreshed).toBe(true);
+    } finally {
+      await act(async () => {
+        setup.renderer.destroy();
+      });
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  test("reload shortcut reflects updated git working tree content", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "hunk-git-reload-"));
+    const file = join(dir, "test.txt");
+
+    // Set up a git repo with an initial commit
+    execSync("git init && git config user.email test@test && git config user.name test", { cwd: dir });
+    writeFileSync(file, "original line\n");
+    execSync("git add . && git commit -m init", { cwd: dir });
+
+    // First working tree change
+    writeFileSync(file, "original line\nfirst change\n");
+
+    const bootstrap = await loadAppBootstrap(
+      { kind: "git", staged: false, options: { mode: "stack" } },
+      { cwd: dir },
+    );
+
+    const setup = await testRender(<AppHost bootstrap={bootstrap} />, {
+      width: 120,
+      height: 20,
+    });
+
+    try {
+      await flush(setup);
+      let frame = setup.captureCharFrame();
+      expect(frame).toContain("first change");
+      expect(frame).not.toContain("second change");
+
+      // Modify the file again while hunk is open
+      writeFileSync(file, "original line\nsecond change\n");
+
+      // Press r to reload
+      await act(async () => {
+        await setup.mockInput.typeText("r");
+      });
+
+      let refreshed = false;
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await flush(setup);
+        frame = setup.captureCharFrame();
+        if (frame.includes("second change") && !frame.includes("first change")) {
           refreshed = true;
           break;
         }

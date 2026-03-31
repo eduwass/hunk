@@ -409,7 +409,10 @@ export function App({
       wrapLines,
     });
 
-    await onReloadSession(nextInput, { resetApp: false });
+    await onReloadSession(nextInput, {
+      resetApp: false,
+      sourcePath: bootstrap.changeset.sourceLabel,
+    });
   }, [
     bootstrap.input,
     canRefreshCurrentInput,

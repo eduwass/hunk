@@ -5,6 +5,12 @@ import { loadHighlightedDiff, type HighlightedDiffCode } from "./pierre";
 const SHARED_HIGHLIGHTED_DIFF_CACHE = new Map<string, HighlightedDiffCode>();
 const SHARED_HIGHLIGHT_PROMISES = new Map<string, Promise<HighlightedDiffCode>>();
 
+/** Flush the shared highlight cache so reloaded files are re-highlighted from scratch. */
+export function flushHighlightCache() {
+  SHARED_HIGHLIGHTED_DIFF_CACHE.clear();
+  SHARED_HIGHLIGHT_PROMISES.clear();
+}
+
 /** Resolve highlighted diff content with shared caching and background prefetch support. */
 export function useHighlightedDiff({
   file,
