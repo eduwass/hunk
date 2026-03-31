@@ -31,7 +31,6 @@ export function PaneDivider({
           border: zenMode ? [] : ["top", "left"],
           borderColor: isResizing ? theme.accent : zenMode ? theme.background : theme.border,
           backgroundColor: isResizing ? theme.accentMuted : zenMode ? theme.background : theme.panel,
-          backgroundColor: isResizing ? theme.accentMuted : theme.panel,
         }}
         customBorderChars={{
           topLeft: "┬",
