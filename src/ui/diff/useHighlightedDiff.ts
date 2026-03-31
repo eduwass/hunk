@@ -27,8 +27,8 @@ function patchFingerprint(file: DiffFile) {
 
 /** Cache key that includes a content fingerprint so stale entries are never served
  *  after reload. Unchanged files keep their cache hit across reloads. */
-function buildCacheKey(appearance: string, file: DiffFile) {
-  return `${appearance}:${file.id}:${patchFingerprint(file)}`;
+function buildCacheKey(appearance: string, file: DiffFile, themeId?: string) {
+  return `${themeId ?? appearance}:${appearance}:${file.id}:${patchFingerprint(file)}`;
 }
 
 /** Only commit a highlight result if the promise is still the active one for that key.
@@ -51,17 +51,19 @@ function commitHighlightResult(
 export function useHighlightedDiff({
   file,
   appearance,
+  themeId,
   onHighlightReady,
   shouldLoadHighlight,
 }: {
   file: DiffFile | undefined;
   appearance: "light" | "dark";
+  themeId?: string;
   onHighlightReady?: () => void;
   shouldLoadHighlight?: boolean;
 }) {
   const [highlighted, setHighlighted] = useState<HighlightedDiffCode | null>(null);
   const [highlightedCacheKey, setHighlightedCacheKey] = useState<string | null>(null);
-  const appearanceCacheKey = file ? buildCacheKey(appearance, file) : null;
+  const appearanceCacheKey = file ? buildCacheKey(appearance, file, themeId) : null;
 
   // Selected files load immediately; background prefetch can opt neighboring files in later.
   const pendingHighlight = useMemo(() => {
@@ -79,7 +81,7 @@ export function useHighlightedDiff({
       return existing;
     }
 
-    const pending = loadHighlightedDiff(file, appearance);
+    const pending = loadHighlightedDiff(file, appearance, themeId);
     SHARED_HIGHLIGHT_PROMISES.set(appearanceCacheKey, pending);
     return pending;
   }, [appearance, appearanceCacheKey, file, shouldLoadHighlight]);

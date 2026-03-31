@@ -2,39 +2,40 @@ import {
   cleanLastNewline,
   getHighlighterOptions,
   getSharedHighlighter,
+  registerCustomTheme,
   renderDiffWithHighlighter,
   type FileDiffMetadata,
   type Hunk,
 } from "@pierre/diffs";
 import type { DiffFile } from "../../core/types";
 import type { AppTheme } from "../themes";
+import shadesOfPurpleTheme from "../themes/shades-of-purple.json";
 
-const PIERRE_THEME = {
-  light: "pierre-light",
-  dark: "pierre-dark",
-} as const;
+// Register the Shades of Purple VS Code theme with Pierre/Shiki so it can
+// be used for syntax highlighting instead of the default pierre-dark palette.
+registerCustomTheme("Shades of Purple", () => Promise.resolve(shadesOfPurpleTheme as any));
 
-/** Resolve the single Pierre theme name needed for the current appearance. */
-function pierreThemeName(appearance: AppTheme["appearance"]) {
-  return PIERRE_THEME[appearance];
+/** Map hunk theme IDs to Shiki/Pierre theme names. Themes not listed here
+ *  fall back to the built-in pierre-dark / pierre-light defaults. */
+const THEME_ID_TO_SHIKI: Record<string, { dark: string; light: string }> = {
+  "shades-of-purple": { dark: "Shades of Purple", light: "pierre-light" },
+};
+
+const DEFAULT_PIERRE_THEME = { dark: "pierre-dark", light: "pierre-light" } as const;
+
+/** Resolve the Pierre/Shiki theme name for the active hunk theme + appearance. */
+function pierreThemeName(appearance: AppTheme["appearance"], themeId?: string) {
+  const mapping = themeId ? THEME_ID_TO_SHIKI[themeId] : undefined;
+  return (mapping ?? DEFAULT_PIERRE_THEME)[appearance];
 }
 
-const PIERRE_RENDER_OPTIONS_BY_APPEARANCE = {
-  light: {
-    theme: pierreThemeName("light"),
+/** Build render options for Pierre, using the correct Shiki theme. */
+function pierreRenderOptions(appearance: AppTheme["appearance"], themeId?: string) {
+  return {
+    theme: pierreThemeName(appearance, themeId),
     tokenizeMaxLineLength: 1_000,
     lineDiffType: "word-alt" as const,
-  },
-  dark: {
-    theme: pierreThemeName("dark"),
-    tokenizeMaxLineLength: 1_000,
-    lineDiffType: "word-alt" as const,
-  },
-} as const;
-
-/** Reuse the render options for one appearance so startup work avoids extra object churn. */
-function pierreRenderOptions(appearance: AppTheme["appearance"]) {
-  return PIERRE_RENDER_OPTIONS_BY_APPEARANCE[appearance];
+  };
 }
 
 type HighlightOptions = ReturnType<typeof getHighlighterOptions>;
@@ -134,33 +135,55 @@ function parseStyleValue(styleValue: unknown) {
   return styles;
 }
 
-const RESERVED_PIERRE_TOKEN_COLORS = {
+/** Map every Pierre default token color to the theme's syntaxColors slot it corresponds to.
+ *  This allows each hunk theme to fully restyle syntax highlighting without
+ *  replacing Pierre's Shiki-based highlighting engine. */
+const PIERRE_TOKEN_REMAP: Record<"dark" | "light", Record<string, keyof AppTheme["syntaxColors"]>> = {
   dark: {
-    "#ff6762": "keyword",
-    "#5ecc71": "string",
+    "#ff678d": "keyword",    // pink.400 — keywords, control flow
+    "#5ecc71": "string",     // green.400 — string literals
+    "#68cdf2": "number",     // cyan.400 — numeric literals
+    "#84848a": "comment",    // gray.600 — comments
+    "#9d6afb": "function",   // indigo.400 — function names
+    "#d568ea": "type",       // purple.400 — type names
+    "#ffa359": "property",   // orange.400 — variables, properties
+    "#79797f": "punctuation", // gray.700 — punctuation, operators
+    "#ffd452": "number",     // yellow.400 — constants
+    "#ff6762": "keyword",    // red.400 — tags (remap to keyword)
+    "#61d5c0": "type",       // mint.400 — attributes (remap to type)
+    "#00c5d2": "punctuation", // cyan.500 — operators
+    "#fbfbfb": "default",    // gray.020 — default text
   },
   light: {
-    "#d52c36": "keyword",
-    "#199f43": "string",
+    "#fc2b73": "keyword",    // pink.500
+    "#199f43": "string",     // green.600
+    "#1ca1c7": "number",     // cyan.600
+    "#84848a": "comment",    // gray.600
+    "#7b43f8": "function",   // indigo.500
+    "#c635e4": "type",       // purple.500
+    "#d47628": "property",   // orange.600
+    "#79797f": "punctuation", // gray.700
+    "#d5a910": "number",     // yellow.600 — constants
+    "#d52c36": "keyword",    // red.600 — tags
+    "#16a994": "type",       // mint.600 — attributes
+    "#08c0ef": "punctuation", // cyan.500 — operators
+    "#0b0b0c": "default",    // gray.1020 — default text
   },
-} as const;
+};
 
-/** Remap Pierre token hues that collide with diff add/remove semantics into theme-safe syntax colors. */
+/** Remap Pierre's default token colors to the active theme's syntax palette. */
 function normalizeHighlightedColor(color: string | undefined, theme: AppTheme) {
   if (!color) {
     return color;
   }
 
   const normalized = color.trim().toLowerCase();
-  const reserved =
-    RESERVED_PIERRE_TOKEN_COLORS[theme.appearance][
-      normalized as keyof (typeof RESERVED_PIERRE_TOKEN_COLORS)[typeof theme.appearance]
-    ];
-  if (!reserved) {
+  const slot = PIERRE_TOKEN_REMAP[theme.appearance]?.[normalized];
+  if (!slot) {
     return color;
   }
 
-  return theme.syntaxColors[reserved];
+  return theme.syntaxColors[slot];
 }
 
 /** Append a span while coalescing adjacent runs with identical colors. */
@@ -349,13 +372,15 @@ function trailingCollapsedLines(metadata: FileDiffMetadata) {
 async function prepareHighlighter(
   language: string | undefined,
   appearance: AppTheme["appearance"],
+  themeId?: string,
 ) {
   const resolvedLanguage = language ?? "text";
-  const cacheKey = `${appearance}:${resolvedLanguage}`;
+  const themeName = pierreThemeName(appearance, themeId);
+  const cacheKey = `${themeName}:${resolvedLanguage}`;
   const options =
     highlighterOptionsByKey.get(cacheKey) ??
     getHighlighterOptions(resolvedLanguage, {
-      theme: pierreThemeName(appearance),
+      theme: themeName,
     });
 
   if (!highlighterOptionsByKey.has(cacheKey)) {
@@ -395,14 +420,15 @@ function queueHighlightedDiff(run: () => HighlightedDiffCode) {
 export async function loadHighlightedDiff(
   file: DiffFile,
   appearance: AppTheme["appearance"] = "dark",
+  themeId?: string,
 ): Promise<HighlightedDiffCode> {
   try {
-    const highlighter = await prepareHighlighter(file.language, appearance);
+    const highlighter = await prepareHighlighter(file.language, appearance, themeId);
     return queueHighlightedDiff(() => {
       const highlighted = renderDiffWithHighlighter(
         file.metadata,
         highlighter,
-        pierreRenderOptions(appearance),
+        pierreRenderOptions(appearance, themeId),
       );
       return {
         deletionLines: highlighted.code.deletionLines as Array<HastNode | undefined>,
@@ -410,12 +436,12 @@ export async function loadHighlightedDiff(
       };
     });
   } catch {
-    const highlighter = await prepareHighlighter("text", appearance);
+    const highlighter = await prepareHighlighter("text", appearance, themeId);
     return queueHighlightedDiff(() => {
       const highlighted = renderDiffWithHighlighter(
         { ...file.metadata, lang: "text" },
         highlighter,
-        pierreRenderOptions(appearance),
+        pierreRenderOptions(appearance, themeId),
       );
       return {
         deletionLines: highlighted.code.deletionLines as Array<HastNode | undefined>,

@@ -48,6 +48,7 @@ export function PierreDiffView({
   const resolvedHighlighted = useHighlightedDiff({
     file,
     appearance: theme.appearance,
+    themeId: theme.id,
     onHighlightReady,
     shouldLoadHighlight,
   });
