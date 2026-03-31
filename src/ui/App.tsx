@@ -118,7 +118,7 @@ export function App({
   const [showLineNumbers, setShowLineNumbers] = useState(bootstrap.initialShowLineNumbers ?? true);
   const [wrapLines, setWrapLines] = useState(bootstrap.initialWrapLines ?? false);
   const [showHunkHeaders, setShowHunkHeaders] = useState(bootstrap.initialShowHunkHeaders ?? true);
-  const [zenMode, setZenMode] = useState(false);
+  const [zenMode, setZenMode] = useState(bootstrap.initialZenMode ?? false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [forceSidebarOpen, setForceSidebarOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);

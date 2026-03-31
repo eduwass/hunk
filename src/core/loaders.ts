@@ -515,5 +515,6 @@ export async function loadAppBootstrap(
     initialWrapLines: input.options.wrapLines ?? false,
     initialShowHunkHeaders: input.options.hunkHeaders ?? true,
     initialShowAgentNotes: input.options.agentNotes ?? false,
+    initialZenMode: input.options.zenMode ?? false,
   };
 }
