@@ -246,6 +246,51 @@ describe("themes", () => {
     expect(custom.syntaxColors.keyword).toBe("#ff00ff");
   });
 
+  test("a full syntax theme JSON drives highlighting by name", () => {
+    const syntaxThemeData = { name: "Shades of Purple", type: "dark" as const, tokenColors: [] };
+    const custom = resolveTheme("custom", null, {
+      base: "catppuccin-mocha",
+      label: "My Theme",
+      syntaxThemeData,
+      // A 9-token block is present too, but the full theme JSON should take precedence.
+      syntax: { keyword: "#ff00ff" },
+    });
+
+    expect(custom.syntaxTheme).toBe("Shades of Purple");
+    expect(custom.syntaxThemeData).toEqual(syntaxThemeData);
+    // The 9-token palette is still kept for collision normalization against diff backgrounds.
+    expect(custom.syntaxColors.keyword).toBe("#ff00ff");
+  });
+
+  test("withTransparentBackground only swaps painted background fields", () => {
+    const theme = resolveTheme("github-dark-default", null);
+    const transparent = withTransparentBackground(theme);
+
+    expect(transparent).toMatchObject({
+      background: TRANSPARENT_BACKGROUND,
+      panel: TRANSPARENT_BACKGROUND,
+      panelAlt: TRANSPARENT_BACKGROUND,
+      addedBg: TRANSPARENT_BACKGROUND,
+      removedBg: TRANSPARENT_BACKGROUND,
+      contextBg: TRANSPARENT_BACKGROUND,
+      addedContentBg: TRANSPARENT_BACKGROUND,
+      removedContentBg: TRANSPARENT_BACKGROUND,
+      contextContentBg: TRANSPARENT_BACKGROUND,
+      lineNumberBg: TRANSPARENT_BACKGROUND,
+      selectedHunk: TRANSPARENT_BACKGROUND,
+      noteBackground: TRANSPARENT_BACKGROUND,
+      noteTitleBackground: TRANSPARENT_BACKGROUND,
+    });
+    expect(transparent.id).toBe(theme.id);
+    expect(transparent.label).toBe(theme.label);
+    expect(transparent.text).toBe(theme.text);
+    expect(transparent.muted).toBe(theme.muted);
+    expect(transparent.addedSignColor).toBe(theme.addedSignColor);
+    expect(transparent.removedSignColor).toBe(theme.removedSignColor);
+    expect(transparent.syntaxColors).toBe(theme.syntaxColors);
+    expect(theme.background).not.toBe(TRANSPARENT_BACKGROUND);
+  });
+
   test("withTransparentSurfaces keeps added/removed row tints", () => {
     const theme = resolveTheme("github-dark-default", null);
     const transparent = withTransparentSurfaces(theme);
