@@ -82,6 +82,7 @@ function withCurrentViewOptions(
     showHunkHeaders: boolean;
     showLineNumbers: boolean;
     showMenuBar: boolean;
+    nerdFontIcons: boolean;
     wrapLines: boolean;
     borderless: boolean;
   },
@@ -96,6 +97,7 @@ function withCurrentViewOptions(
       hunkHeaders: view.showHunkHeaders,
       lineNumbers: view.showLineNumbers,
       menuBar: view.showMenuBar,
+      nerdFontIcons: view.nerdFontIcons,
       wrapLines: view.wrapLines,
       borderless: view.borderless,
     },
@@ -150,7 +152,7 @@ export function App({
   const [showLineNumbers, setShowLineNumbers] = useState(bootstrap.initialShowLineNumbers ?? true);
   const [wrapLines, setWrapLines] = useState(bootstrap.initialWrapLines ?? false);
   const [copyDecorations, setCopyDecorations] = useState(bootstrap.initialCopyDecorations ?? false);
-  const nerdFontIcons = bootstrap.initialNerdFontIcons ?? false;
+  const [nerdFontIcons, setNerdFontIcons] = useState(bootstrap.initialNerdFontIcons ?? false);
   const [codeHorizontalOffset, setCodeHorizontalOffset] = useState(0);
   const [showHunkHeaders, setShowHunkHeaders] = useState(bootstrap.initialShowHunkHeaders ?? true);
   const [showMenuBar, setShowMenuBar] = useState(bootstrap.initialShowMenuBar ?? true);
@@ -471,6 +473,11 @@ export function App({
     setShowLineNumbers((current) => !current);
   };
 
+  /** Toggle optional Nerd Font file and folder icons without changing git status markers. */
+  const toggleNerdFontIcons = () => {
+    setNerdFontIcons((current) => !current);
+  };
+
   /** Toggle whether mouse selection copies review decorations or only file content. */
   const toggleCopyDecorations = () => {
     setCopyDecorations((current) => !current);
@@ -627,6 +634,7 @@ export function App({
       showHunkHeaders,
       showLineNumbers,
       showMenuBar,
+      nerdFontIcons,
       wrapLines,
       borderless,
     });
@@ -650,6 +658,7 @@ export function App({
     showHunkHeaders,
     showLineNumbers,
     showMenuBar,
+    nerdFontIcons,
     themeId,
     wrapLines,
     borderless,
@@ -911,6 +920,7 @@ export function App({
         showHunkHeaders,
         showLineNumbers,
         showMenuBar,
+        nerdFontIcons,
         renderSidebar,
         borderless,
         toggleBorderless,
@@ -922,6 +932,7 @@ export function App({
         toggleHunkHeaders,
         toggleLineNumbers,
         toggleMenuBar,
+        toggleNerdFontIcons,
         toggleLineWrap,
         toggleSidebar,
         triggerEditSelectedFile,
@@ -946,6 +957,7 @@ export function App({
       showHunkHeaders,
       showLineNumbers,
       showMenuBar,
+      nerdFontIcons,
       renderSidebar,
       borderless,
       toggleBorderless,
@@ -955,6 +967,7 @@ export function App({
       toggleHunkHeaders,
       toggleLineNumbers,
       toggleMenuBar,
+      toggleNerdFontIcons,
       toggleLineWrap,
       toggleSidebar,
       triggerEditSelectedFile,

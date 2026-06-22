@@ -146,6 +146,7 @@ describe("ui helpers", () => {
       showHunkHeaders: false,
       showLineNumbers: true,
       showMenuBar: true,
+      nerdFontIcons: true,
       renderSidebar: false,
       borderless: false,
       toggleBorderless: () => {},
@@ -157,6 +158,7 @@ describe("ui helpers", () => {
       toggleHunkHeaders: () => {},
       toggleLineNumbers: () => {},
       toggleMenuBar: () => {},
+      toggleNerdFontIcons: () => {},
       toggleLineWrap: () => {},
       toggleSidebar: () => {},
       triggerEditSelectedFile: () => {},
@@ -189,6 +191,7 @@ describe("ui helpers", () => {
     ).toEqual([
       "Stacked view",
       "Menu bar",
+      "File icons",
       "Agent notes",
       "Line numbers",
       "Line wrapping",

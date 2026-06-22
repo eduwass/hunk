@@ -18,6 +18,7 @@ export interface BuildAppMenusOptions {
   showHunkHeaders: boolean;
   showLineNumbers: boolean;
   showMenuBar: boolean;
+  nerdFontIcons: boolean;
   renderSidebar: boolean;
   borderless: boolean;
   toggleBorderless: () => void;
@@ -29,6 +30,7 @@ export interface BuildAppMenusOptions {
   toggleHunkHeaders: () => void;
   toggleLineNumbers: () => void;
   toggleMenuBar: () => void;
+  toggleNerdFontIcons: () => void;
   toggleLineWrap: () => void;
   toggleSidebar: () => void;
   triggerEditSelectedFile: () => void;
@@ -53,6 +55,7 @@ export function buildAppMenus({
   showHunkHeaders,
   showLineNumbers,
   showMenuBar,
+  nerdFontIcons,
   renderSidebar,
   borderless,
   toggleBorderless,
@@ -64,6 +67,7 @@ export function buildAppMenus({
   toggleHunkHeaders,
   toggleLineNumbers,
   toggleMenuBar,
+  toggleNerdFontIcons,
   toggleLineWrap,
   toggleSidebar,
   triggerEditSelectedFile,
@@ -147,6 +151,12 @@ export function buildAppMenus({
         hint: "M",
         checked: showMenuBar,
         action: toggleMenuBar,
+      },
+      {
+        kind: "item",
+        label: "File icons",
+        checked: nerdFontIcons,
+        action: toggleNerdFontIcons,
       },
       { kind: "separator" },
       {
