@@ -4,6 +4,7 @@ import { iconForFile } from "../../lib/fileIcons";
 import { sidebarEntryStats, type FileGroupEntry, type FileListEntry } from "../../lib/files";
 import { fitText, padText } from "../../lib/text";
 import type { AppTheme } from "../../themes";
+import { chromeSurfaceBg } from "../chrome/chromeSurface";
 
 /** Get icon and color for file state using standard git status codes. */
 function getFileStateIcon(entry: FileListEntry, theme: AppTheme): { icon: string; color: string } {
@@ -49,7 +50,7 @@ export function FileGroupHeader({
         height: 1,
         paddingLeft,
         flexDirection: "row",
-        backgroundColor: theme.panel,
+        backgroundColor: chromeSurfaceBg(theme, "sidebar"),
       }}
     >
       {folderIcon ? <text fg={folderIcon.color}>{folderIcon.icon} </text> : null}
@@ -78,7 +79,9 @@ export const FileListItem = memo(function FileListItem({
   theme: AppTheme;
   onSelectFile: (fileId: string) => void;
 }) {
-  const rowBackground = selected ? theme.panelAlt : theme.panel;
+  const rowBackground = selected
+    ? chromeSurfaceBg(theme, "contextBand")
+    : chromeSurfaceBg(theme, "sidebar");
   const stats = sidebarEntryStats(entry);
   const { icon, color } = getFileStateIcon(entry, theme);
   const typeIcon = nerdFontIcons ? iconForFile(entry.name) : null;

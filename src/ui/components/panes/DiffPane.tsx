@@ -1723,12 +1723,14 @@ export function DiffPane({
     <box
       style={{
         width,
-        border: renderTopChrome ? ["top"] : [],
+        // The top rule + gap show only with top chrome on and bordered mode; the
+        // menu-bar toggle and borderless chrome each suppress them.
+        border: renderTopChrome && theme.chrome !== "borderless" ? ["top"] : [],
         borderColor: theme.border,
         backgroundColor: theme.panel,
         paddingX: 0,
         flexDirection: "column",
-        ...(renderTopChrome
+        ...(renderTopChrome && theme.chrome !== "borderless"
           ? { paddingY: 1 }
           : { paddingTop: 0, paddingBottom: pagerMode ? 0 : 1 }),
       }}

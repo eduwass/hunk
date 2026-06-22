@@ -13,7 +13,7 @@ import {
 import { withLazySyntaxStyle } from "./themes/syntax";
 import type { AppTheme, SyntaxColors, ThemeBase } from "./themes/types";
 
-export type { AppTheme, SyntaxColors, ThemeBase } from "./themes/types";
+export type { AppTheme, ChromeMode, ChromeSurfaces, SyntaxColors, ThemeBase } from "./themes/types";
 
 export const TRANSPARENT_BACKGROUND = "transparent";
 export const DEFAULT_DARK_THEME_ID = "github-dark-default";
@@ -358,6 +358,36 @@ export function bundledThemeDiffColors(themeId: string): BundledShikiThemeDiffCo
   return getBundledShikiThemeDiffColors(themeId);
 }
 
+/** Return a copy of a theme whose painted surfaces allow the terminal background through. */
+export function withTransparentBackground(theme: AppTheme): AppTheme {
+  return {
+    ...theme,
+    background: TRANSPARENT_BACKGROUND,
+    panel: TRANSPARENT_BACKGROUND,
+    panelAlt: TRANSPARENT_BACKGROUND,
+    addedBg: TRANSPARENT_BACKGROUND,
+    removedBg: TRANSPARENT_BACKGROUND,
+    contextBg: TRANSPARENT_BACKGROUND,
+    addedContentBg: TRANSPARENT_BACKGROUND,
+    removedContentBg: TRANSPARENT_BACKGROUND,
+    contextContentBg: TRANSPARENT_BACKGROUND,
+    lineNumberBg: TRANSPARENT_BACKGROUND,
+    selectedHunk: TRANSPARENT_BACKGROUND,
+    noteBackground: TRANSPARENT_BACKGROUND,
+    noteTitleBackground: TRANSPARENT_BACKGROUND,
+    surfaces: {
+      ...theme.surfaces,
+      code: TRANSPARENT_BACKGROUND,
+      contextBand: TRANSPARENT_BACKGROUND,
+      sectionHeader: TRANSPARENT_BACKGROUND,
+      sidebar: TRANSPARENT_BACKGROUND,
+      overlay: TRANSPARENT_BACKGROUND,
+      note: TRANSPARENT_BACKGROUND,
+      noteTitle: TRANSPARENT_BACKGROUND,
+    },
+  };
+}
+
 /**
  * Return a copy of a theme whose neutral surfaces allow the terminal background through while
  * added/removed row tints stay painted. Both the interactive TUI and static pager hosts use
@@ -372,5 +402,12 @@ export function withTransparentSurfaces(theme: AppTheme): AppTheme {
     contextBg: TRANSPARENT_BACKGROUND,
     contextContentBg: TRANSPARENT_BACKGROUND,
     lineNumberBg: TRANSPARENT_BACKGROUND,
+    surfaces: {
+      ...theme.surfaces,
+      code: TRANSPARENT_BACKGROUND,
+      contextBand: TRANSPARENT_BACKGROUND,
+      sectionHeader: TRANSPARENT_BACKGROUND,
+      sidebar: TRANSPARENT_BACKGROUND,
+    },
   };
 }

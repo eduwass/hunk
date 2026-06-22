@@ -97,6 +97,7 @@ export interface CommonOptions {
   copyDecorations?: boolean;
   promptSaveViewPreferences?: boolean;
   nerdFontIcons?: boolean;
+  borderless?: boolean;
   transparentBackground?: boolean;
   colorMoved?: boolean;
 }
@@ -178,6 +179,7 @@ export interface PersistedViewPreferences {
   showAgentNotes: boolean;
   copyDecorations: boolean;
   nerdFontIcons: boolean;
+  borderless: boolean;
 }
 
 export interface HelpCommandInput {
@@ -408,4 +410,5 @@ export interface AppBootstrap {
   initialCopyDecorations?: boolean;
   viewPreferencesConfigPath?: string;
   initialNerdFontIcons?: boolean;
+  initialBorderless?: boolean;
 }

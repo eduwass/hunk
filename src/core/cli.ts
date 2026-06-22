@@ -78,6 +78,7 @@ function buildCommonOptions(
     nerdFontIcons:
       resolveBooleanFlag(argv, "--file-icons", "--no-file-icons") ??
       resolveBooleanFlag(argv, "--nerd-font-icons", "--no-nerd-font-icons"),
+    borderless: resolveBooleanFlag(argv, "--borderless", "--no-borderless"),
     transparentBackground: resolveBooleanFlag(argv, "--transparent-bg", "--no-transparent-bg"),
   };
 }
@@ -101,6 +102,8 @@ function applyCommonOptions(command: Command) {
     .option("--no-file-icons", "hide Nerd Font file and folder icons")
     .option("--nerd-font-icons", "show Nerd Font file and folder icons")
     .option("--no-nerd-font-icons", "hide Nerd Font file and folder icons")
+    .option("--borderless", "use filled background bands instead of chrome borders")
+    .option("--no-borderless", "use drawn borders for chrome")
     .option("--transparent-bg", "let terminal background show through Hunk surfaces")
     .option("--no-transparent-bg", "paint Hunk surfaces with the active theme");
 }
@@ -167,6 +170,7 @@ function renderCliHelp() {
     "  --hunk-headers / --no-hunk-headers      show or hide hunk metadata rows",
     "  --agent-notes / --no-agent-notes        show or hide agent notes by default",
     "  --file-icons / --no-file-icons          show or hide Nerd Font file/folder icons",
+    "  --borderless / --no-borderless          fill chrome with background bands or draw borders",
     "  --transparent-bg / --no-transparent-bg  let terminal background show through Hunk surfaces",
     "  --theme <theme>                         named theme override",
     "",

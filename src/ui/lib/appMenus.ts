@@ -19,6 +19,8 @@ export interface BuildAppMenusOptions {
   showLineNumbers: boolean;
   showMenuBar: boolean;
   renderSidebar: boolean;
+  borderless: boolean;
+  toggleBorderless: () => void;
   toggleCopyDecorations: () => void;
   toggleAgentNotes: () => void;
   toggleFocusArea: () => void;
@@ -52,6 +54,8 @@ export function buildAppMenus({
   showLineNumbers,
   showMenuBar,
   renderSidebar,
+  borderless,
+  toggleBorderless,
   toggleCopyDecorations,
   toggleAgentNotes,
   toggleFocusArea,
@@ -179,6 +183,12 @@ export function buildAppMenus({
         hint: "m",
         checked: showHunkHeaders,
         action: toggleHunkHeaders,
+      },
+      {
+        kind: "item",
+        label: "Borderless chrome",
+        checked: borderless,
+        action: toggleBorderless,
       },
       {
         kind: "item",

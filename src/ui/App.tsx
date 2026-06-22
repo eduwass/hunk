@@ -41,7 +41,8 @@ import { fileRowId } from "./lib/ids";
 import { openSelectedFileInEditor } from "./lib/openInEditor";
 import { resolveResponsiveLayout } from "./lib/responsive";
 import { resizeSidebarWidth } from "./lib/sidebar";
-import { availableThemes, resolveTheme, withTransparentSurfaces } from "./themes";
+import { availableThemes, resolveTheme, withTransparentBackground } from "./themes";
+import type { ChromeMode } from "./themes";
 
 type FocusArea = "files" | "filter" | "note";
 type ActiveAddNoteTarget = ActiveAddNoteAffordance & { fileId: string };
@@ -82,6 +83,7 @@ function withCurrentViewOptions(
     showLineNumbers: boolean;
     showMenuBar: boolean;
     wrapLines: boolean;
+    borderless: boolean;
   },
 ): CliInput {
   return {
@@ -95,6 +97,7 @@ function withCurrentViewOptions(
       lineNumbers: view.showLineNumbers,
       menuBar: view.showMenuBar,
       wrapLines: view.wrapLines,
+      borderless: view.borderless,
     },
   };
 }
@@ -151,6 +154,7 @@ export function App({
   const [codeHorizontalOffset, setCodeHorizontalOffset] = useState(0);
   const [showHunkHeaders, setShowHunkHeaders] = useState(bootstrap.initialShowHunkHeaders ?? true);
   const [showMenuBar, setShowMenuBar] = useState(bootstrap.initialShowMenuBar ?? true);
+  const [borderless, setBorderless] = useState(bootstrap.initialBorderless ?? false);
   const [themeSelectorState, setThemeSelectorState] = useState<ThemeSelectorState>({
     open: false,
     selectedIndex: 0,
@@ -178,13 +182,15 @@ export function App({
     () => resolveTheme(effectiveThemeId, detectedThemeMode ?? null, bootstrap.customTheme),
     [effectiveThemeId, detectedThemeMode, bootstrap.customTheme],
   );
-  const activeTheme = useMemo(
-    () =>
-      bootstrap.input.options.transparentBackground
-        ? withTransparentSurfaces(baseTheme)
-        : baseTheme,
-    [baseTheme, bootstrap.input.options.transparentBackground],
-  );
+  const activeTheme = useMemo(() => {
+    const surfaceTheme = bootstrap.input.options.transparentBackground
+      ? withTransparentBackground(baseTheme)
+      : baseTheme;
+    const chrome: ChromeMode = borderless ? "borderless" : "bordered";
+    // Only clone when the mode actually differs so the lazy syntax-style getter
+    // stays untouched in the common (bordered) case.
+    return surfaceTheme.chrome === chrome ? surfaceTheme : { ...surfaceTheme, chrome };
+  }, [baseTheme, bootstrap.input.options.transparentBackground, borderless]);
 
   const themeSelectorItems = useMemo(
     () =>
@@ -206,10 +212,14 @@ export function App({
       showMenuBar,
       showAgentNotes,
       copyDecorations,
+      nerdFontIcons,
+      borderless,
     }),
     [
+      borderless,
       copyDecorations,
       layoutMode,
+      nerdFontIcons,
       showAgentNotes,
       showHunkHeaders,
       showLineNumbers,
@@ -588,6 +598,11 @@ export function App({
     setShowMenuBar((current) => !current);
   };
 
+  /** Switch chrome between drawn borders and filled background bands. */
+  const toggleBorderless = () => {
+    setBorderless((current) => !current);
+  };
+
   const canRefreshCurrentInput = canReloadInput(bootstrap.input);
   const watchEnabled = Boolean(bootstrap.input.options.watch && canRefreshCurrentInput);
 
@@ -605,6 +620,7 @@ export function App({
       showLineNumbers,
       showMenuBar,
       wrapLines,
+      borderless,
     });
 
     await onReloadSession(nextInput, {
@@ -628,6 +644,7 @@ export function App({
     showMenuBar,
     themeId,
     wrapLines,
+    borderless,
   ]);
 
   const triggerRefreshCurrentInput = useCallback(() => {
@@ -887,6 +904,8 @@ export function App({
         showLineNumbers,
         showMenuBar,
         renderSidebar,
+        borderless,
+        toggleBorderless,
         toggleCopyDecorations,
         toggleAgentNotes,
         toggleFocusArea,
@@ -920,6 +939,8 @@ export function App({
       showLineNumbers,
       showMenuBar,
       renderSidebar,
+      borderless,
+      toggleBorderless,
       toggleAgentNotes,
       toggleFocusArea,
       toggleHelp,

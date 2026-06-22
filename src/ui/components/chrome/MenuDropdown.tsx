@@ -1,5 +1,6 @@
 import type { AppTheme } from "../../themes";
 import { padText } from "../../lib/text";
+import { chromeSurfaceBg, overlaySurfaceStyle } from "./chromeSurface";
 import type { MenuEntry, MenuId, MenuSpec } from "./menu";
 
 /** Render one actionable menu line with an optional keyboard hint. */
@@ -68,9 +69,7 @@ export function MenuDropdown({
         width: clampedWidth,
         height: activeMenuEntries.length + 2,
         zIndex: 40,
-        border: true,
-        borderColor: theme.border,
-        backgroundColor: theme.panel,
+        ...overlaySurfaceStyle(theme, theme.border),
         flexDirection: "column",
       }}
     >
@@ -78,9 +77,19 @@ export function MenuDropdown({
         entry.kind === "separator" ? (
           <box
             key={`${activeMenuId}:separator:${index}`}
-            style={{ height: 1, paddingLeft: 1, paddingRight: 1 }}
+            style={{
+              height: 1,
+              paddingLeft: 1,
+              paddingRight: 1,
+              backgroundColor: chromeSurfaceBg(theme, "overlay"),
+            }}
           >
-            <text fg={theme.border}>{padText("-".repeat(clampedWidth - 4), clampedWidth - 2)}</text>
+            {/* Bordered menus rule off groups; borderless ones use a blank band. */}
+            {theme.chrome === "borderless" ? null : (
+              <text fg={theme.border}>
+                {padText("-".repeat(clampedWidth - 4), clampedWidth - 2)}
+              </text>
+            )}
           </box>
         ) : (
           <box
@@ -90,7 +99,10 @@ export function MenuDropdown({
               paddingLeft: 1,
               paddingRight: 1,
               flexDirection: "row",
-              backgroundColor: activeMenuItemIndex === index ? theme.accentMuted : theme.panel,
+              backgroundColor:
+                activeMenuItemIndex === index
+                  ? chromeSurfaceBg(theme, "selection")
+                  : chromeSurfaceBg(theme, "overlay"),
             }}
             onMouseOver={() => onHoverItem(index)}
             onMouseUp={() => onSelectItem(entry)}

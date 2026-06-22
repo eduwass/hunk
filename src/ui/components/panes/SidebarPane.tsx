@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type RefObject } from "react";
 import { sidebarEntryStatsWidth, type SidebarEntry } from "../../lib/files";
 import { buildSidebarRenderWindow } from "../../lib/sidebarRenderWindow";
 import type { AppTheme } from "../../themes";
+import { chromeSurfaceBg } from "../chrome/chromeSurface";
 import { FileGroupHeader, FileListItem } from "./FileListItem";
 
 /** Render the file navigation sidebar. */
@@ -96,13 +97,17 @@ export function SidebarPane({
     };
   }, [entries.length, scrollRef]);
 
+  const sidebarBg = chromeSurfaceBg(theme, "sidebar");
   return (
     <box
       style={{
         width,
-        border: showTopChrome ? ["top"] : [],
-        borderColor: theme.border,
-        backgroundColor: theme.panel,
+        // The top rule shows only with top chrome on and bordered mode; the menu-bar
+        // toggle and borderless chrome each suppress it.
+        ...(showTopChrome && theme.chrome !== "borderless"
+          ? { border: ["top"], borderColor: theme.border }
+          : {}),
+        backgroundColor: sidebarBg,
         paddingX: 0,
         flexDirection: "column",
         ...(showTopChrome ? { paddingY: 1 } : { paddingTop: 0, paddingBottom: 1 }),
@@ -115,10 +120,10 @@ export function SidebarPane({
         focused={false}
         scrollY={true}
         viewportCulling={true}
-        rootOptions={{ backgroundColor: theme.panel }}
-        wrapperOptions={{ backgroundColor: theme.panel }}
-        viewportOptions={{ backgroundColor: theme.panel }}
-        contentOptions={{ backgroundColor: theme.panel }}
+        rootOptions={{ backgroundColor: sidebarBg }}
+        wrapperOptions={{ backgroundColor: sidebarBg }}
+        viewportOptions={{ backgroundColor: sidebarBg }}
+        contentOptions={{ backgroundColor: sidebarBg }}
         verticalScrollbarOptions={{ visible: false }}
         horizontalScrollbarOptions={{ visible: false }}
       >
@@ -128,7 +133,7 @@ export function SidebarPane({
               return (
                 <box
                   key={item.key}
-                  style={{ width: "100%", height: item.height, backgroundColor: theme.panel }}
+                  style={{ width: "100%", height: item.height, backgroundColor: sidebarBg }}
                 />
               );
             }

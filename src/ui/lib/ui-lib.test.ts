@@ -147,6 +147,8 @@ describe("ui helpers", () => {
       showLineNumbers: true,
       showMenuBar: true,
       renderSidebar: false,
+      borderless: false,
+      toggleBorderless: () => {},
       toggleCopyDecorations: () => {},
       toggleAgentNotes: () => {},
       toggleFocusArea: () => {},

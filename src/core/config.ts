@@ -75,6 +75,7 @@ const DEFAULT_VIEW_PREFERENCES: PersistedViewPreferences = {
   showAgentNotes: false,
   copyDecorations: false,
   nerdFontIcons: false,
+  borderless: false,
 };
 
 const VIEW_PREFERENCES_PROMPT_CONFIG_KEY = "prompt_save_view_preferences";
@@ -353,6 +354,7 @@ function readConfigPreferences(source: Record<string, unknown>): CommonOptions {
     copyDecorations: normalizeBoolean(source.copy_decorations),
     promptSaveViewPreferences: normalizeBoolean(source[VIEW_PREFERENCES_PROMPT_CONFIG_KEY]),
     nerdFontIcons: normalizeBoolean(source.file_icons) ?? normalizeBoolean(source.nerd_font_icons),
+    borderless: normalizeBoolean(source.borderless),
     transparentBackground:
       normalizeBoolean(source.transparentBackground) ??
       normalizeBoolean(source.transparent_background),
@@ -380,6 +382,7 @@ function mergeOptions(base: CommonOptions, overrides: CommonOptions): CommonOpti
     promptSaveViewPreferences:
       overrides.promptSaveViewPreferences ?? base.promptSaveViewPreferences,
     nerdFontIcons: overrides.nerdFontIcons ?? base.nerdFontIcons,
+    borderless: overrides.borderless ?? base.borderless,
     transparentBackground: overrides.transparentBackground ?? base.transparentBackground,
     colorMoved: overrides.colorMoved ?? base.colorMoved,
   };
@@ -545,6 +548,7 @@ export function resolveConfiguredCliInput(
     copyDecorations: DEFAULT_VIEW_PREFERENCES.copyDecorations,
     promptSaveViewPreferences: true,
     nerdFontIcons: DEFAULT_VIEW_PREFERENCES.nerdFontIcons,
+    borderless: DEFAULT_VIEW_PREFERENCES.borderless,
     transparentBackground: false,
   };
 
@@ -584,6 +588,7 @@ export function resolveConfiguredCliInput(
     copyDecorations: resolvedOptions.copyDecorations ?? DEFAULT_VIEW_PREFERENCES.copyDecorations,
     promptSaveViewPreferences: resolvedOptions.promptSaveViewPreferences ?? true,
     nerdFontIcons: resolvedOptions.nerdFontIcons ?? DEFAULT_VIEW_PREFERENCES.nerdFontIcons,
+    borderless: resolvedOptions.borderless ?? DEFAULT_VIEW_PREFERENCES.borderless,
     transparentBackground: resolvedOptions.transparentBackground ?? false,
     colorMoved: resolvedOptions.colorMoved,
   };
