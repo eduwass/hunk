@@ -147,6 +147,7 @@ export function App({
   const [showLineNumbers, setShowLineNumbers] = useState(bootstrap.initialShowLineNumbers ?? true);
   const [wrapLines, setWrapLines] = useState(bootstrap.initialWrapLines ?? false);
   const [copyDecorations, setCopyDecorations] = useState(bootstrap.initialCopyDecorations ?? false);
+  const nerdFontIcons = bootstrap.initialNerdFontIcons ?? false;
   const [codeHorizontalOffset, setCodeHorizontalOffset] = useState(0);
   const [showHunkHeaders, setShowHunkHeaders] = useState(bootstrap.initialShowHunkHeaders ?? true);
   const [showMenuBar, setShowMenuBar] = useState(bootstrap.initialShowMenuBar ?? true);
@@ -1112,6 +1113,7 @@ export function App({
               entries={review.sidebarEntries}
               scrollRef={sidebarScrollRef}
               selectedFileId={selectedFile?.id}
+              nerdFontIcons={nerdFontIcons}
               showTopChrome={showMenuBar}
               textWidth={sidebarTextWidth}
               theme={activeTheme}
@@ -1144,6 +1146,7 @@ export function App({
           expandedGapsByFileId={review.expandedGapsByFileId}
           files={filteredFiles}
           pagerMode={pagerMode}
+          nerdFontIcons={nerdFontIcons}
           screenLeft={diffPaneScreenLeft}
           screenTop={diffPaneScreenTop}
           showTopChrome={showMenuBar && !pagerMode}

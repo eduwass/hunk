@@ -10,6 +10,7 @@ export function SidebarPane({
   entries,
   scrollRef,
   selectedFileId,
+  nerdFontIcons = false,
   showTopChrome = true,
   textWidth,
   theme,
@@ -20,6 +21,7 @@ export function SidebarPane({
   entries: SidebarEntry[];
   scrollRef: RefObject<ScrollBoxRenderable | null>;
   selectedFileId?: string;
+  nerdFontIcons?: boolean;
   showTopChrome?: boolean;
   textWidth: number;
   theme: AppTheme;
@@ -133,11 +135,18 @@ export function SidebarPane({
 
             const { entry } = item;
             return entry.kind === "group" ? (
-              <FileGroupHeader key={entry.id} entry={entry} textWidth={textWidth} theme={theme} />
+              <FileGroupHeader
+                key={entry.id}
+                entry={entry}
+                nerdFontIcons={nerdFontIcons}
+                textWidth={textWidth}
+                theme={theme}
+              />
             ) : (
               <FileListItem
                 key={entry.id}
                 entry={entry}
+                nerdFontIcons={nerdFontIcons}
                 selected={entry.id === selectedFileId}
                 statsWidth={statsWidth}
                 textWidth={textWidth}

@@ -73,6 +73,7 @@ const DEFAULT_VIEW_PREFERENCES: PersistedViewPreferences = {
   showMenuBar: true,
   showAgentNotes: false,
   copyDecorations: false,
+  nerdFontIcons: false,
 };
 
 const VIEW_PREFERENCES_PROMPT_CONFIG_KEY = "prompt_save_view_preferences";
@@ -298,6 +299,7 @@ function readConfigPreferences(source: Record<string, unknown>): CommonOptions {
     agentNotes: normalizeBoolean(source.agent_notes),
     copyDecorations: normalizeBoolean(source.copy_decorations),
     promptSaveViewPreferences: normalizeBoolean(source[VIEW_PREFERENCES_PROMPT_CONFIG_KEY]),
+    nerdFontIcons: normalizeBoolean(source.file_icons) ?? normalizeBoolean(source.nerd_font_icons),
     transparentBackground:
       normalizeBoolean(source.transparentBackground) ??
       normalizeBoolean(source.transparent_background),
@@ -324,6 +326,7 @@ function mergeOptions(base: CommonOptions, overrides: CommonOptions): CommonOpti
     copyDecorations: overrides.copyDecorations ?? base.copyDecorations,
     promptSaveViewPreferences:
       overrides.promptSaveViewPreferences ?? base.promptSaveViewPreferences,
+    nerdFontIcons: overrides.nerdFontIcons ?? base.nerdFontIcons,
     transparentBackground: overrides.transparentBackground ?? base.transparentBackground,
     colorMoved: overrides.colorMoved ?? base.colorMoved,
   };
@@ -488,6 +491,7 @@ export function resolveConfiguredCliInput(
     agentNotes: DEFAULT_VIEW_PREFERENCES.showAgentNotes,
     copyDecorations: DEFAULT_VIEW_PREFERENCES.copyDecorations,
     promptSaveViewPreferences: true,
+    nerdFontIcons: DEFAULT_VIEW_PREFERENCES.nerdFontIcons,
     transparentBackground: false,
   };
 
@@ -520,6 +524,7 @@ export function resolveConfiguredCliInput(
     agentNotes: resolvedOptions.agentNotes ?? DEFAULT_VIEW_PREFERENCES.showAgentNotes,
     copyDecorations: resolvedOptions.copyDecorations ?? DEFAULT_VIEW_PREFERENCES.copyDecorations,
     promptSaveViewPreferences: resolvedOptions.promptSaveViewPreferences ?? true,
+    nerdFontIcons: resolvedOptions.nerdFontIcons ?? DEFAULT_VIEW_PREFERENCES.nerdFontIcons,
     transparentBackground: resolvedOptions.transparentBackground ?? false,
     colorMoved: resolvedOptions.colorMoved,
   };

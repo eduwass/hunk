@@ -184,6 +184,7 @@ describe("config resolution", () => {
       [
         'theme = "github-light-default"',
         "wrap_lines = true",
+        "file_icons = true",
         "menu_bar = false",
         "",
         "[pager]",
@@ -206,6 +207,7 @@ describe("config resolution", () => {
       wrapLines: true,
       menuBar: false,
       hunkHeaders: false,
+      nerdFontIcons: true,
       agentNotes: true,
       promptSaveViewPreferences: false,
       transparentBackground: true,
@@ -625,6 +627,7 @@ describe("config resolution", () => {
         "menu_bar = false",
         "hunk_headers = false",
         "agent_notes = true",
+        "nerd_font_icons = true",
         "copy_decorations = false",
       ].join("\n"),
     );
@@ -653,6 +656,7 @@ describe("config resolution", () => {
     expect(bootstrap.initialShowHunkHeaders).toBe(false);
     expect(bootstrap.initialShowAgentNotes).toBe(true);
     expect(bootstrap.initialCopyDecorations).toBe(false);
+    expect(bootstrap.initialNerdFontIcons).toBe(true);
   });
 
   test("loadAppBootstrap carries the configured custom theme into the UI bootstrap", async () => {
