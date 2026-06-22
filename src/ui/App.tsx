@@ -179,7 +179,11 @@ export function App({
   );
   const effectiveThemeId = themeSelectorState.previewThemeId ?? themeId;
   const baseTheme = useMemo(() => {
-    const resolved = resolveTheme(effectiveThemeId, detectedThemeMode ?? null, bootstrap.customTheme);
+    const resolved = resolveTheme(
+      effectiveThemeId,
+      detectedThemeMode ?? null,
+      bootstrap.customTheme,
+    );
     const chrome: ChromeMode = borderless ? "borderless" : "bordered";
     // Carry the chrome mode on the base theme so overlays (menus/dialogs), which
     // use baseTheme for a solid background, render borderless too. Only clone when

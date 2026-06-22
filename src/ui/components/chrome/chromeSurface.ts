@@ -39,12 +39,12 @@ export function chromeSurfaceBg(theme: AppTheme, level: SurfaceLevel): string {
 }
 
 /**
- * Background for the top/bottom chrome bars (menu bar, status bar). These have
- * their own bordered baseline (`panelAlt`) distinct from file-section headers, so
- * they get a dedicated resolver rather than reusing a ladder level.
+ * Background for the top/bottom chrome bars (menu bar, status bar) — the VS Code
+ * title/status-bar color (`panelAlt`) in both modes, distinct from the panel-colored
+ * file-section headers. Borderless mode only drops the rule under it.
  */
 export function topChromeBg(theme: AppTheme): string {
-  return theme.chrome === "borderless" ? theme.surfaces.sectionHeader : theme.panelAlt;
+  return theme.panelAlt;
 }
 
 /** Box style fragment for a floating overlay (popup, menu, or dialog). */
