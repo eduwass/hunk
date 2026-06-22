@@ -178,19 +178,21 @@ export function App({
     [bootstrap.customTheme],
   );
   const effectiveThemeId = themeSelectorState.previewThemeId ?? themeId;
-  const baseTheme = useMemo(
-    () => resolveTheme(effectiveThemeId, detectedThemeMode ?? null, bootstrap.customTheme),
-    [effectiveThemeId, detectedThemeMode, bootstrap.customTheme],
-  );
-  const activeTheme = useMemo(() => {
-    const surfaceTheme = bootstrap.input.options.transparentBackground
-      ? withTransparentBackground(baseTheme)
-      : baseTheme;
+  const baseTheme = useMemo(() => {
+    const resolved = resolveTheme(effectiveThemeId, detectedThemeMode ?? null, bootstrap.customTheme);
     const chrome: ChromeMode = borderless ? "borderless" : "bordered";
-    // Only clone when the mode actually differs so the lazy syntax-style getter
-    // stays untouched in the common (bordered) case.
-    return surfaceTheme.chrome === chrome ? surfaceTheme : { ...surfaceTheme, chrome };
-  }, [baseTheme, bootstrap.input.options.transparentBackground, borderless]);
+    // Carry the chrome mode on the base theme so overlays (menus/dialogs), which
+    // use baseTheme for a solid background, render borderless too. Only clone when
+    // the mode differs so the lazy syntax-style getter stays untouched when bordered.
+    return resolved.chrome === chrome ? resolved : { ...resolved, chrome };
+  }, [effectiveThemeId, detectedThemeMode, bootstrap.customTheme, borderless]);
+  const activeTheme = useMemo(
+    () =>
+      bootstrap.input.options.transparentBackground
+        ? withTransparentBackground(baseTheme)
+        : baseTheme,
+    [baseTheme, bootstrap.input.options.transparentBackground],
+  );
 
   const themeSelectorItems = useMemo(
     () =>
