@@ -32,28 +32,33 @@ export function PaneDivider({
       <box
         style={{
           width: 1,
-          ...(revealLine
-            ? { border: ["top", "left"], borderColor: isResizing ? theme.accent : theme.border }
-            : {}),
+          // Explicitly clear the border at rest in borderless mode; an omitted
+          // border key still renders the line from customBorderChars below.
+          border: revealLine ? ["top", "left"] : [],
+          ...(revealLine ? { borderColor: isResizing ? theme.accent : theme.border } : {}),
           backgroundColor: isResizing
             ? theme.accentMuted
             : borderless
               ? chromeSurfaceBg(theme, "sidebar")
               : theme.panel,
         }}
-        customBorderChars={{
-          topLeft: "┬",
-          topRight: "┬",
-          bottomLeft: "┴",
-          bottomRight: "┴",
-          horizontal: "─",
-          vertical: "│",
-          topT: "┬",
-          bottomT: "┴",
-          leftT: "├",
-          rightT: "┤",
-          cross: "┼",
-        }}
+        {...(revealLine
+          ? {
+              customBorderChars: {
+                topLeft: "┬",
+                topRight: "┬",
+                bottomLeft: "┴",
+                bottomRight: "┴",
+                horizontal: "─",
+                vertical: "│",
+                topT: "┬",
+                bottomT: "┴",
+                leftT: "├",
+                rightT: "┤",
+                cross: "┼",
+              },
+            }
+          : {})}
       />
 
       <box
