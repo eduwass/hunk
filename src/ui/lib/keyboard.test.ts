@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test";
 import type { KeyEvent } from "@opentui/core";
 import { isPageUpKey } from "./keyboard";
 
-const key = (over: Partial<KeyEvent>): KeyEvent => ({ name: "", sequence: "", ...over }) as KeyEvent;
+const key = (over: Partial<KeyEvent>): KeyEvent =>
+  ({ name: "", sequence: "", ...over }) as KeyEvent;
 
 describe("isPageUpKey", () => {
   test("unmodified b scrolls a page up", () => {

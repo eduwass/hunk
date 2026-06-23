@@ -1,4 +1,5 @@
 import type { AppTheme } from "../../themes";
+import { blendHex } from "../../lib/color";
 import { padText } from "../../lib/text";
 import { chromeSurfaceBg, overlaySurfaceStyle } from "./chromeSurface";
 import type { MenuEntry, MenuId, MenuSpec } from "./menu";
@@ -59,6 +60,14 @@ export function MenuDropdown({
 }) {
   const clampedWidth = Math.min(activeMenuWidth, Math.max(22, terminalWidth - 2));
   const clampedLeft = Math.max(1, Math.min(activeMenuSpec.left, terminalWidth - clampedWidth - 1));
+  const borderless = theme.chrome === "borderless";
+  // Bordered menus add 2 rows for the top/bottom rule; borderless ones have no border, so the
+  // box must hug its entries or it trails empty band rows.
+  const dropdownHeight = activeMenuEntries.length + (borderless ? 0 : 2);
+  // A faint rule keeps separators legible against the filled band without reintroducing chrome.
+  const separatorFg = borderless
+    ? blendHex(theme.muted, chromeSurfaceBg(theme, "overlay"), 0.5)
+    : theme.border;
 
   return (
     <box
@@ -67,7 +76,7 @@ export function MenuDropdown({
         top,
         left: clampedLeft,
         width: clampedWidth,
-        height: activeMenuEntries.length + 2,
+        height: dropdownHeight,
         zIndex: 40,
         ...overlaySurfaceStyle(theme, theme.border),
         flexDirection: "column",
@@ -84,12 +93,8 @@ export function MenuDropdown({
               backgroundColor: chromeSurfaceBg(theme, "overlay"),
             }}
           >
-            {/* Bordered menus rule off groups; borderless ones use a blank band. */}
-            {theme.chrome === "borderless" ? null : (
-              <text fg={theme.border}>
-                {padText("-".repeat(clampedWidth - 4), clampedWidth - 2)}
-              </text>
-            )}
+            {/* Both modes rule off groups; borderless uses a fainter line so it stays subtle. */}
+            <text fg={separatorFg}>{padText("-".repeat(clampedWidth - 4), clampedWidth - 2)}</text>
           </box>
         ) : (
           <box
