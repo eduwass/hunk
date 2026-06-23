@@ -87,7 +87,7 @@ function DiffSectionComponent({
       style={{
         width: "100%",
         flexDirection: "column",
-        backgroundColor: theme.chrome === "borderless" ? theme.surfaces.code : theme.panel,
+        backgroundColor: theme.panel,
         overflow: "visible",
       }}
     >

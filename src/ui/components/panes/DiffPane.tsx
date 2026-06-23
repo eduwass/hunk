@@ -1719,10 +1719,10 @@ export function DiffPane({
     }
   }, [scrollRef]);
 
-  // Borderless chrome paints the diff canvas with the editor (code) surface so the stream reads
-  // as the editor, distinct from the panel-colored sidebar and the file-header bands. Bordered
-  // mode keeps the legacy panel background framed by its borders.
-  const paneBg = theme.chrome === "borderless" ? theme.surfaces.code : theme.panel;
+  // The diff stream renders rows on the panel surface, so the structural pane background must match
+  // it in both chrome modes; using a different "canvas" color here would expose a stray strip on the
+  // right where rows do not fill the full viewport width.
+  const paneBg = theme.panel;
 
   return (
     <box
