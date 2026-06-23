@@ -2450,13 +2450,13 @@ describe("UI components", () => {
     const frame = await captureFrame(
       <HelpDialog
         canRefresh={true}
-        terminalHeight={39}
+        terminalHeight={40}
         terminalWidth={76}
         theme={theme}
         onClose={() => {}}
       />,
       76,
-      39,
+      40,
     );
 
     const expectedRows = [
@@ -2483,6 +2483,7 @@ describe("UI components", () => {
       "a               toggle AI notes",
       "z               toggle unchanged context",
       "l / w / m / M   lines / wrap / metadata / menu",
+      "B               toggle borderless chrome",
       "e               open file in $EDITOR",
       "Review",
       "/               focus file filter",

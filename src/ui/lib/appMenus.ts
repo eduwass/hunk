@@ -187,6 +187,7 @@ export function buildAppMenus({
       {
         kind: "item",
         label: "Borderless chrome",
+        hint: "B",
         checked: borderless,
         action: toggleBorderless,
       },

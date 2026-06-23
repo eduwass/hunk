@@ -1014,6 +1014,7 @@ export function App({
     switchMenu,
     themeSelectorOpen: themeSelectorState.open,
     toggleAgentNotes,
+    toggleBorderless,
     toggleFocusArea,
     toggleGapForSelectedHunk: review.toggleSelectedHunkGap,
     toggleHelp,
