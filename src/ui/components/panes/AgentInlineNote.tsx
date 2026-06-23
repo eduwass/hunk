@@ -206,6 +206,15 @@ export function AgentInlineNote({
   const borderless = theme.chrome === "borderless";
   const surfaceBg = borderless ? theme.surfaces.note : theme.panel;
   const borderFg = borderless ? surfaceBg : theme.noteBorder;
+  // Borderless chrome layers the card: a slightly higher title band over the body, and
+  // filled primary/secondary action buttons, so the box structure reads without any border.
+  // The title-row border glyphs hide against the title band (not the body) in this mode.
+  const titleBg = borderless ? theme.surfaces.noteTitle : theme.panel;
+  const titleBorderFg = borderless ? titleBg : theme.noteBorder;
+  const saveBg = borderless ? theme.accent : surfaceBg;
+  const saveFg = borderless ? theme.background : theme.noteTitleText;
+  const cancelBg = borderless ? theme.surfaces.noteTitle : surfaceBg;
+  const cancelFg = theme.noteTitleText;
   const closeText = onClose ? "[x]" : "";
   const titleText = `${inlineNoteTitle(annotation, noteIndex, noteCount)} - ${annotationRangeLabel(annotation, file)}`;
   const { boxWidth, boxLeft, contentWidth } = agentNoteBoxLayout({ anchorSide, layout, width });
@@ -303,15 +312,15 @@ export function AgentInlineNote({
           <box style={{ width: boxLeft, height: 1, backgroundColor: surfaceBg }}>
             <text>{" ".repeat(boxLeft)}</text>
           </box>
-          <box style={{ width: boxWidth, height: 1, backgroundColor: surfaceBg }}>
+          <box style={{ width: boxWidth, height: 1, backgroundColor: titleBg }}>
             <text>
-              <span fg={borderFg} bg={surfaceBg}>
+              <span fg={titleBorderFg} bg={titleBg}>
                 ╭─
               </span>
-              <span fg={theme.noteTitleText} bg={surfaceBg}>
+              <span fg={theme.noteTitleText} bg={titleBg}>
                 {draftTitleText}
               </span>
-              <span fg={borderFg} bg={surfaceBg}>
+              <span fg={titleBorderFg} bg={titleBg}>
                 {draftTopBorderSuffix}
               </span>
             </text>
@@ -431,7 +440,7 @@ export function AgentInlineNote({
             </text>
           </box>
           <box onMouseUp={draft.onSave} style={{ width: saveInnerWidth, height: 1 }}>
-            <text fg={theme.noteTitleText} bg={surfaceBg}>
+            <text fg={saveFg} bg={saveBg}>
               {padText(" Save (^S) ", saveInnerWidth)}
             </text>
           </box>
@@ -441,7 +450,7 @@ export function AgentInlineNote({
             </text>
           </box>
           <box onMouseUp={draft.onCancel} style={{ width: cancelInnerWidth, height: 1 }}>
-            <text fg={theme.noteTitleText} bg={surfaceBg}>
+            <text fg={cancelFg} bg={cancelBg}>
               {padText(" Cancel (Esc) ", cancelInnerWidth)}
             </text>
           </box>
@@ -537,36 +546,36 @@ export function AgentInlineNote({
         <box style={{ width: boxLeft, height: 1, backgroundColor: surfaceBg }}>
           <text>{" ".repeat(boxLeft)}</text>
         </box>
-        <box style={{ width: savedTopPrefixWidth, height: 1, backgroundColor: surfaceBg }}>
+        <box style={{ width: savedTopPrefixWidth, height: 1, backgroundColor: titleBg }}>
           <text>
-            <span fg={borderFg} bg={surfaceBg}>
+            <span fg={titleBorderFg} bg={titleBg}>
               ╭─
             </span>
-            <span fg={theme.noteTitleText} bg={surfaceBg}>
+            <span fg={theme.noteTitleText} bg={titleBg}>
               {savedTitleText}
             </span>
-            <span fg={borderFg} bg={surfaceBg}>
+            <span fg={titleBorderFg} bg={titleBg}>
               {"─".repeat(savedTopBorderSuffixWidth)}
             </span>
           </text>
         </box>
         {closeText ? (
-          <box style={{ width: closeGapWidth, height: 1, backgroundColor: surfaceBg }}>
-            <text bg={surfaceBg}>{" ".repeat(closeGapWidth)}</text>
+          <box style={{ width: closeGapWidth, height: 1, backgroundColor: titleBg }}>
+            <text bg={titleBg}>{" ".repeat(closeGapWidth)}</text>
           </box>
         ) : null}
         {closeText ? (
           <box
             onMouseUp={onClose}
-            style={{ width: closeWidth, height: 1, backgroundColor: surfaceBg }}
+            style={{ width: closeWidth, height: 1, backgroundColor: titleBg }}
           >
-            <text fg={theme.noteTitleText} bg={surfaceBg}>
+            <text fg={theme.noteTitleText} bg={titleBg}>
               {closeText}
             </text>
           </box>
         ) : null}
-        <box style={{ width: 1, height: 1, backgroundColor: surfaceBg }}>
-          <text fg={borderFg} bg={surfaceBg}>
+        <box style={{ width: 1, height: 1, backgroundColor: titleBg }}>
+          <text fg={titleBorderFg} bg={titleBg}>
             ╮
           </text>
         </box>

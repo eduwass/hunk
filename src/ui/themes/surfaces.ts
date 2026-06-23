@@ -1,3 +1,4 @@
+import { blendHex } from "../lib/color";
 import type { ChromeSurfaces, ThemeBase } from "./types";
 
 /**
@@ -10,6 +11,12 @@ import type { ChromeSurfaces, ThemeBase } from "./types";
  * direction — lighter-than-editor for github-dark, darker for Shades of Purple —
  * and authored custom themes look native. Adjacent-level distinctness is covered
  * by `surfaces.test.ts`.
+ *
+ * Note surfaces are the exception: a theme's `noteBackground` is usually just the
+ * panel color (fine when a drawn border frames the box), but borderless chrome has
+ * no border, so a panel-colored note would dissolve into the stream. We lift the
+ * note body and — a touch more — its title band toward the foreground so the filled
+ * comment card reads as a distinct, layered surface without any border.
  */
 export function deriveSurfaces(theme: ThemeBase): ChromeSurfaces {
   return {
@@ -18,8 +25,8 @@ export function deriveSurfaces(theme: ThemeBase): ChromeSurfaces {
     sectionHeader: theme.panel,
     contextBand: theme.panelAlt,
     overlay: theme.panelAlt,
-    note: theme.noteBackground,
-    noteTitle: theme.noteTitleBackground,
+    note: blendHex(theme.text, theme.noteBackground, 0.08),
+    noteTitle: blendHex(theme.text, theme.noteTitleBackground, 0.16),
     selection: theme.accentMuted,
     selectionPrimary: theme.accent,
   };
