@@ -305,7 +305,9 @@ export function App({
     };
   }, []);
 
-  const bodyPadding = pagerMode ? 0 : BODY_PADDING;
+  // Borderless chrome fills the width edge-to-edge; the legacy body gutter would otherwise expose
+  // the root (code) background as a 1-column band down each side, reading as a stray vertical bar.
+  const bodyPadding = pagerMode || borderless ? 0 : BODY_PADDING;
   const bodyWidth = Math.max(0, terminal.width - bodyPadding);
   const responsiveLayout = resolveResponsiveLayout(layoutMode, terminal.width);
   const canForceShowSidebar = bodyWidth >= SIDEBAR_MIN_WIDTH + DIVIDER_WIDTH + DIFF_MIN_WIDTH;
