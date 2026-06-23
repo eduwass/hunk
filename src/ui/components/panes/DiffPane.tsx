@@ -1719,6 +1719,11 @@ export function DiffPane({
     }
   }, [scrollRef]);
 
+  // Borderless chrome paints the diff canvas with the editor (code) surface so the stream reads
+  // as the editor, distinct from the panel-colored sidebar and the file-header bands. Bordered
+  // mode keeps the legacy panel background framed by its borders.
+  const paneBg = theme.chrome === "borderless" ? theme.surfaces.code : theme.panel;
+
   return (
     <box
       style={{
@@ -1727,7 +1732,7 @@ export function DiffPane({
         // menu-bar toggle and borderless chrome each suppress them.
         border: renderTopChrome && theme.chrome !== "borderless" ? ["top"] : [],
         borderColor: theme.border,
-        backgroundColor: theme.panel,
+        backgroundColor: paneBg,
         paddingX: 0,
         flexDirection: "column",
         ...(renderTopChrome && theme.chrome !== "borderless"
@@ -1772,10 +1777,10 @@ export function DiffPane({
               onMouseScroll={handleMouseScroll}
               onMouseUp={endCopySelection}
               scrollAcceleration={mouseWheelScrollAcceleration}
-              rootOptions={{ backgroundColor: theme.panel }}
-              wrapperOptions={{ backgroundColor: theme.panel }}
-              viewportOptions={{ backgroundColor: theme.panel }}
-              contentOptions={{ backgroundColor: theme.panel }}
+              rootOptions={{ backgroundColor: paneBg }}
+              wrapperOptions={{ backgroundColor: paneBg }}
+              viewportOptions={{ backgroundColor: paneBg }}
+              contentOptions={{ backgroundColor: paneBg }}
               verticalScrollbarOptions={{ visible: false }}
               horizontalScrollbarOptions={{ visible: false }}
             >
@@ -1790,7 +1795,7 @@ export function DiffPane({
                     return (
                       <box
                         key={item.key}
-                        style={{ width: "100%", height: item.height, backgroundColor: theme.panel }}
+                        style={{ width: "100%", height: item.height, backgroundColor: paneBg }}
                       />
                     );
                   }

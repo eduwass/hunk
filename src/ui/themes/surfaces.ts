@@ -20,8 +20,12 @@ import type { ChromeSurfaces, ThemeBase } from "./types";
  */
 export function deriveSurfaces(theme: ThemeBase): ChromeSurfaces {
   return {
+    // Three visibly distinct regions: the editor canvas (code), the file-header / gap
+    // bands one step off it (panel), and the sidebar recessed furthest (panelAlt). Header
+    // must differ from code, contextBand, and overlay, so panel is its only fit; the sidebar
+    // then takes panelAlt so the file tree, the headers, and the canvas never share a shade.
     code: theme.background,
-    sidebar: theme.panel,
+    sidebar: theme.panelAlt,
     sectionHeader: theme.panel,
     contextBand: theme.panelAlt,
     overlay: theme.panelAlt,
