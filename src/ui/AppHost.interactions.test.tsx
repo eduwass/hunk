@@ -1503,7 +1503,7 @@ describe("App interactions", () => {
       });
       await flush(setup);
 
-      for (let index = 0; index < 4; index += 1) {
+      for (let index = 0; index < 5; index += 1) {
         await act(async () => {
           await setup.mockInput.pressArrow("down");
         });
