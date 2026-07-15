@@ -91,6 +91,8 @@ const PERSISTED_VIEW_PREFERENCE_KEYS: Array<{
   { configKey: "menu_bar", value: (preferences) => preferences.showMenuBar },
   { configKey: "agent_notes", value: (preferences) => preferences.showAgentNotes },
   { configKey: "copy_decorations", value: (preferences) => preferences.copyDecorations },
+  { configKey: "file_icons", value: (preferences) => preferences.nerdFontIcons },
+  { configKey: "borderless", value: (preferences) => preferences.borderless },
 ];
 
 interface ConfigResolutionOptions {

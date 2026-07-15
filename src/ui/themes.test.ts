@@ -8,6 +8,7 @@ import {
   DEFAULT_LIGHT_THEME_ID,
   resolveTheme,
   TRANSPARENT_BACKGROUND,
+  withTransparentBackground,
   withTransparentSurfaces,
 } from "./themes";
 

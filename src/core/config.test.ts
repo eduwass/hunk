@@ -78,6 +78,8 @@ describe("config persistence", () => {
         showMenuBar: false,
         showAgentNotes: true,
         copyDecorations: true,
+        nerdFontIcons: false,
+        borderless: false,
       },
       { env: { HOME: home } },
     );
@@ -94,6 +96,8 @@ describe("config persistence", () => {
         "menu_bar = false",
         "agent_notes = true",
         "copy_decorations = true",
+        "file_icons = false",
+        "borderless = false",
         "",
         "[custom_theme]",
         'label = "Keep me"',
@@ -132,6 +136,8 @@ describe("config persistence", () => {
       showMenuBar: true,
       showAgentNotes: true,
       copyDecorations: false,
+      nerdFontIcons: false,
+      borderless: false,
     } as const;
 
     expect(diffPersistedViewPreferences(initial, { ...initial })).toEqual([]);
